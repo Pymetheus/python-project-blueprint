@@ -1,12 +1,12 @@
 [project]
 name = "python-project-blueprint"
 version = "0.0.1"
-description = "[[DESCRIPTION]]"
+description = "Production-ready Python project template with modern tooling, CI/CD, security, and configuration built in."
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.12"
 license = {"file" = "LICENSE.md"}
 authors = [
-    { name = "[[USERNAME]]", email = "AUTHOR@EXAMPLE.COM" }
+    { name = "Pymetheus", email = "github.senate902@passfwd.com" }
 ]
 
 classifiers = [
@@ -32,7 +32,7 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/Pymetheus/python-project-blueprint"  # "https://github.com/[[USERNAME]]/[[REPO_NAME]]"
 Repository = "https://github.com/Pymetheus/python-project-blueprint"  # "https://github.com/[[USERNAME]]/[[REPO_NAME]]"
-Documentation = "https://github.com/Pymetheus/python-project-blueprint/blob/main/docs/DOCUMENTATION.md"  # "https://github.com/[[USERNAME]]/[[REPO_NAME]]/blob/main/docs/DOCUMENTATION.md"
+Documentation = "https://github.com/Pymetheus/python-project-blueprint/blob/main/docs/INSTRUCTIONS.md"  # "https://github.com/[[USERNAME]]/[[REPO_NAME]]/blob/main/docs/DOCUMENTATION.md"
 Issues = "https://github.com/Pymetheus/python-project-blueprint/issues"  # "https://github.com/[[USERNAME]]/[[REPO_NAME]]/issues"
 
 [project.scripts]
