@@ -43,60 +43,60 @@ jobs:
             exit 1
           fi
 
-  publish-test-pypi:
-    name: Publish to TestPyPI
-    runs-on: ubuntu-latest
-    needs: download-distribution
-
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/python_project_blueprint # Replace with your package name
-
-    steps:
-      - name: Download build artifacts
-        uses: actions/download-artifact@v7
-        with:
-          name: python-package-distributions-${{ github.event.workflow_run.head_sha }}
-          path: dist/
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish to TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          packages-dir: dist/
-          skip-existing: true
-          verbose: true
-
-  github-release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    needs: [download-distribution, publish-test-pypi]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v7
-        with:
-          name: python-package-distributions-${{ github.event.workflow_run.head_sha }}
-          path: dist/
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract version
-        id: meta
-        run: |
-          VERSION=$(grep '^version =' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*
-          tag_name: v${{ steps.meta.outputs.version }}
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#  publish-test-pypi:
+#    name: Publish to TestPyPI
+#    runs-on: ubuntu-latest
+#    needs: download-distribution
+#
+#    environment:
+#      name: testpypi
+#      url: https://test.pypi.org/p/python_project_blueprint # Replace with your package name
+#
+#    steps:
+#      - name: Download build artifacts
+#        uses: actions/download-artifact@v7
+#        with:
+#          name: python-package-distributions-${{ github.event.workflow_run.head_sha }}
+#          path: dist/
+#          run-id: ${{ github.event.workflow_run.id }}
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Publish to TestPyPI
+#        uses: pypa/gh-action-pypi-publish@release/v1
+#        with:
+#          repository-url: https://test.pypi.org/legacy/
+#          packages-dir: dist/
+#          skip-existing: true
+#          verbose: true
+#
+#  github-release:
+#    name: Create GitHub Release
+#    runs-on: ubuntu-latest
+#    needs: [download-distribution, publish-test-pypi]
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v6
+#
+#      - name: Download build artifacts
+#        uses: actions/download-artifact@v7
+#        with:
+#          name: python-package-distributions-${{ github.event.workflow_run.head_sha }}
+#          path: dist/
+#          run-id: ${{ github.event.workflow_run.id }}
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Extract version
+#        id: meta
+#        run: |
+#          VERSION=$(grep '^version =' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+#          echo "version=$VERSION" >> $GITHUB_OUTPUT
+#
+#      - name: Create GitHub release
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          files: dist/*
+#          tag_name: v${{ steps.meta.outputs.version }}
+#          generate_release_notes: true
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
