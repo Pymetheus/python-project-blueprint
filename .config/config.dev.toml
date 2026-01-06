@@ -1,0 +1,8 @@
+app_name = "[[REPO_NAME]]"
+
+[database]
+host = "db.develop.com"
+port = 5678
+
+[http]
+base_url = "https://api.develop.com"

@@ -1,0 +1,142 @@
+name: Security Scan
+
+on:
+  pull_request:
+    branches:
+      - main
+# Uncomment to enable Git Flow workflow
+#      - develop
+#      - release/**
+  schedule:
+    - cron: '0 0 * * 1' # Every Monday at midnight
+  workflow_dispatch: {}
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  snyk-security-scan:
+    name: Snyk Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv and cache dependencies
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+
+      - name: Install project dependencies
+        run: |
+          uv sync --all-extras
+
+      - name: Export dependencies for Snyk
+        run: |
+          uv export --format requirements-txt --output-file requirements.txt
+          echo "--- Content of requirements.txt ---"
+          cat requirements.txt
+
+      - name: Install Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Install Snyk Python dependencies
+        run: |
+          pip install annotated-types pydantic pydantic-core pydantic-settings python-dotenv typing-extensions typing-inspection
+
+      - name: Run Snyk for Open Source Vulnerabilities (OSS)
+        run: |
+          snyk test \
+            --file=requirements.txt \
+            --package-manager=pip \
+            --org=${{ secrets.SNYK_ORG_ID }} \
+            --sarif \
+            --sarif-file-output=snyk-oss.sarif
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        continue-on-error: true
+
+      - name: Run Snyk Code (SAST)
+        run: snyk code test --sarif > snyk-code.sarif
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Upload SARIF as build artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: snyk-results
+          path: |
+            snyk-code.sarif
+            snyk-oss.sarif
+
+      # --- Upload Snyk SARIF to GitHub Security Dashboard ONLY available on public repos---
+      #- name: Upload SARIF to GitHub Security
+      #  uses: github/codeql-action/upload-sarif@v4
+      #  with:
+      #    sarif_file: snyk-code.sarif
+
+  bandit-sast:
+    name: Bandit Static Application Security Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install uv and cache dependencies
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+
+      - name: Install project dependencies
+        run: |
+          uv lock
+          uv sync --all-extras
+
+      - name: Run Bandit security linter
+        run: uv run bandit -r src/ -f json -o bandit-report.json
+
+      - name: Upload Bandit results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  secrets-scan:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog Secret Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: ${{ github.event.pull_request.head.sha }}

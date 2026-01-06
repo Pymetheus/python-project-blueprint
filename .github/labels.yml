@@ -1,0 +1,111 @@
+
+# -------------------------
+# Types
+# -------------------------
+- name: feature
+  color: "006b75"
+  description: "Types: New functionality requested or planned"
+
+- name: bug
+  color: "d73a4a"
+  description: "Types: Something is broken or not working"
+
+- name: enhancement
+  color: "a2eeef"
+  description: "Types: Improvement to an existing feature"
+
+- name: documentation
+  color: "0075ca"
+  description: "Types: Improvements or additions to documentation"
+
+- name: refactor
+  color: "cfd3d7"
+  description: "Types: Code change that doesn’t alter behavior"
+
+- name: ci
+  color: "6f42c1"
+  description: "Types: CI/CD workflow or pipeline changes"
+
+- name: security
+  color: "e11d48"
+  description: "Types: Security-related vulnerability, fix, or hardening task"
+
+# -------------------------
+# Status
+# -------------------------
+- name: needs-review
+  color: "fbca04"
+  description: "Status: Changes waiting for review"
+
+- name: in-progress
+  color: "1d76db"
+  description: "Status: Work is currently being done"
+
+- name: blocked
+  color: "b60205"
+  description: "Status: Progress cannot continue until something else is resolved"
+
+- name: wontfix
+  color: "ffffff"
+  description: "Status: This will not be worked on"
+
+# -------------------------
+# Priority
+# -------------------------
+- name: P0-critical
+  color: "e11d48"
+  description: "Priority: Immediate attention required (production incident, major breakage)"
+
+- name: P1-high
+  color: "d876e3"
+  description: "Priority: High priority, should be addressed soon"
+
+- name: P2-medium
+  color: "f9d0c4"
+  description: "Priority: Normal priority, standard backlog item"
+
+- name: P3-low
+  color: "c5def5"
+  description: "Priority: Low priority or nice-to-have"
+
+# -------------------------
+# Dependencies
+# -------------------------
+- name: dependencies
+  color: "0366d6"
+  description: "Dependencies: General dependency update"
+
+- name: python
+  color: "3572A5"
+  description: "Dependencies: Python package dependency change"
+
+- name: github-actions
+  color: "2088ff"
+  description: "Dependencies: GitHub Actions workflow or action dependency update"
+
+- name: docker
+  color: "0db7ed"
+  description: "Dependencies: Docker base image or Dockerfile dependency change"
+
+# -------------------------
+# Issue Meta
+# -------------------------
+- name: duplicate
+  color: "cfd3d7"
+  description: "Issue: This issue or pull request already exists"
+
+- name: invalid
+  color: "e4e669"
+  description: "Issue: This doesn't seem right"
+
+- name: help wanted
+  color: "008672"
+  description: "Issue: Extra attention is needed"
+
+- name: good first issue
+  color: "7057ff"
+  description: "Issue: Good for newcomers"
+
+- name: question
+  color: "d876e3"
+  description: "Issue: Further information is requested"

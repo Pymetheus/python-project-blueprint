@@ -1,0 +1,165 @@
+[project]
+name = "python-project-blueprint"
+version = "0.0.1"
+description = "[[DESCRIPTION]]"
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.12"
+license = {"file" = "LICENSE.md"}
+authors = [
+    { name = "[[USERNAME]]", email = "AUTHOR@EXAMPLE.COM" }
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+
+dependencies = [
+    "pydantic-settings>=2.12.0",  # Managing environment variables
+    "structlog>=25.5.0"           # Managing logging
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.0",        # Testing framework
+    "pytest-cov>=7.0.0",    # Coverage plugin for pytest
+    "ruff>=0.14.7",         # Code formatter, Linter, Import sorter
+    "pre-commit>=4.5.0",    # Pre-commit hooks
+    "mypy>=1.19.0",         # Type checker
+    "python-dotenv>=1.2.1", # Managing environment variables
+    "bandit[toml]>=1.7.6",  # Bandit security linter with toml support
+]
+
+[project.urls]
+Homepage = "https://github.com/Pymetheus/python-project-blueprint"  # "https://github.com/[[USERNAME]]/[[REPO_NAME]]"
+Repository = "https://github.com/Pymetheus/python-project-blueprint"  # "https://github.com/[[USERNAME]]/[[REPO_NAME]]"
+Documentation = "https://github.com/Pymetheus/python-project-blueprint/blob/main/docs/DOCUMENTATION.md"  # "https://github.com/[[USERNAME]]/[[REPO_NAME]]/blob/main/docs/DOCUMENTATION.md"
+Issues = "https://github.com/Pymetheus/python-project-blueprint/issues"  # "https://github.com/[[USERNAME]]/[[REPO_NAME]]/issues"
+
+[project.scripts]
+python-project-blueprint = "package_name.main:main"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools.packages.find]
+where = ["src"]  # Essential for the src-layout to find 'package_name'
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov=src",
+    "--cov-report=xml",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--verbose",
+]
+
+[tool.coverage.run]
+source = ["src"]
+relative_files = true
+branch = true
+data_file = ".log/coverage/.coverage"
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/.venv/*",
+    "*/env/*",
+]
+
+[tool.coverage.report]
+skip_covered = false
+fail_under = 80
+show_missing = true
+skip_empty = false
+precision = 2
+
+[tool.coverage.html]
+directory = ".log/coverage/htmlcov"
+
+[tool.coverage.xml]
+output = ".log/coverage/coverage.xml"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".log",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+]
+
+ignore = [
+    "E501",  # Line too long, handled by formatter
+]
+
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]  # Allow asserts in tests
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.ruff.lint.isort]
+known-first-party = ["package_name"]
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+files = "src/package_name"
+explicit_package_bases = true
+namespace_packages = true
+
+# Strictness Control
+strict = true
+check_untyped_defs = true
+disallow_untyped_defs = false        # Chang to true for stricter behaviour
+disallow_incomplete_defs = false     # Chang to true for stricter behaviour
+disallow_untyped_decorators = false  # Chang to true for stricter behaviour
+no_implicit_optional = true
+
+# Warnings & Code Quality
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unreachable = true
+ignore_missing_imports = true
+
+# Output & Cache
+pretty = true
+show_error_codes = true
+cache_dir = ".log/mypy_cache"
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv"]
+skips = ["B101"]
+
+[tool.bandit.assert_used]
+skips = ["tests/*", "test_*.py"]

@@ -1,0 +1,21 @@
+# CODEOWNERS
+
+# Default owner for everything
+* @[[USERNAME]]
+
+# Core application code
+/src/ @[[USERNAME]]
+
+# Tests require review
+/tests/ @[[USERNAME]]
+
+# Configuration changes need approval
+/.config/ @[[USERNAME]]
+pyproject.toml @[[USERNAME]]
+
+# CI/CD changes need approval
+/.github/ @[[USERNAME]]
+
+# Documentation
+/docs/ @[[USERNAME]]
+*.md @[[USERNAME]]

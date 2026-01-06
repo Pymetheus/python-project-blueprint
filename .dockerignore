@@ -1,0 +1,80 @@
+# Global / Operating Systems
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*~
+
+# IDEs & Text Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.scratch/
+
+# Environments & Dependency Managers
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+env/
+ENV/
+bin/
+lib/
+develop-eggs/
+dist/
+build/
+eggs/
+.eggs/
+*.egg-info/
+*.egg
+__pypackages__/
+node_modules/
+
+# Python Artifacts & Tool Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.hypothesis/
+.dmypy.json
+dmypy.json
+
+# Test & Coverage Reports
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+nosetests.xml
+
+# Project Specific Directories (python-project-blueprint)
+# We exclude everything not strictly required to run the application
+.log/
+.github/
+docs/
+notebooks/
+tests/
+res/
+
+# Ignore everything in config except for the shared templates
+.config/*
+!.config/*.example
+!.config/*.example.*
+!.config/config.dev.toml
+
+# Data Handling (Exclude data from image context)
+data/
+
+# Repository Metadata
+.git/
+.gitignore
+.dockerignore
+.pre-commit-config.yaml
+LICENSE.md
+README.md
+pyproject.toml

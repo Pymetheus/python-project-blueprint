@@ -1,0 +1,100 @@
+name: Bootstrap Template
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Collect metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        id: meta
+        run: |
+          REPO="${GITHUB_REPOSITORY##*/}"
+          USER="${GITHUB_REPOSITORY%/*}"
+          YEAR=$(date +%Y)
+
+          DESCRIPTION=$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.description // ""')
+          {
+            echo "description<<EOF"
+            echo "$DESCRIPTION"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          # python package naming
+          PACKAGE=$(echo "$REPO" | sed -E 's/[- ]+/_/g' | tr 'A-Z' 'a-z')  # snake_case for python package
+          DISTRIBUTION=$(echo "$REPO" | sed -E 's/[_ ]+/-/g' | tr 'A-Z' 'a-z')  # kebab-case for python distribution
+
+          # store values for later steps
+          echo "repo=$REPO" >> $GITHUB_OUTPUT
+          echo "user=$USER" >> $GITHUB_OUTPUT
+          echo "year=$YEAR" >> $GITHUB_OUTPUT
+          echo "package=$PACKAGE" >> $GITHUB_OUTPUT
+          echo "distribution=$DISTRIBUTION" >> $GITHUB_OUTPUT
+
+      - name: Install yq
+        uses: mikefarah/yq@v4.50.1
+
+      - name: Load bootstrap config
+        id: load_config
+        run: |
+          EMAIL=$(yq '.email' .github/bootstrap-config.yml)
+          echo "email=$EMAIL" >> $GITHUB_OUTPUT
+
+      - name: Replace placeholders
+        run: |
+          find . -type f \
+            -not -path "./.git/*" \
+            -not -path "./.github/workflows/*" \
+            -print0 | xargs -0 sed -i \
+            -e "s/\\[\\[REPO_NAME\\]\\]/${{ steps.meta.outputs.repo }}/g" \
+            -e "s/\\[\\[DESCRIPTION\\]\\]/${{ steps.meta.outputs.description }}/g" \
+            -e "s/\\[\\[PACKAGE_NAME\\]\\]/${{ steps.meta.outputs.package }}/g" \
+            -e "s/\\package_name/${{ steps.meta.outputs.package }}/g" \
+            -e "s/\\[\\[USERNAME\\]\\]/${{ steps.meta.outputs.user }}/g" \
+            -e "s/\\[\\[EMAIL\\]\\]/${{ steps.load_config.outputs.email }}/g" \
+            -e "s/\\[\\[YEAR\\]\\]/${{ steps.meta.outputs.year }}/g"
+
+      - name: Rename template package directory
+        run: |
+          if [ -d "src/package_name" ]; then
+            mv src/package_name "src/${{ steps.meta.outputs.package }}"
+          fi
+
+      - name: Update pyproject.toml
+        run: |
+          sed -i "s/DISTRIBUTION-NAME/${{ steps.meta.outputs.distribution }}/g" pyproject.toml
+          sed -i "s/package_name/${{ steps.meta.outputs.package }}/g" pyproject.toml
+          sed -i "s/AUTHOR@EXAMPLE.COM/${{ steps.load_config.outputs.email }}/g" pyproject.toml
+
+      - name: Replace Billboard README with Project README
+        run: |
+          mv docs/PROJECT_README.md README.md
+
+      - name: Commit changes and remove bootstrap workflow
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add -A
+          git commit -m "Bootstrap project from template Phase I" || true
+          git rm .github/workflows/bootstrap.yml .github/bootstrap-config.yml docs/CHECKLIST.md docs/INSTRUCTIONS.md
+          git commit -m "Bootstrap project from template Phase II" || true
+          git push
+
+      - name: Bootstrap Summary
+        run: |
+          echo "## ✅ Bootstrap Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "Your project **${{ steps.meta.outputs.package }}** is ready." >> $GITHUB_STEP_SUMMARY
+          echo "1. The placeholders have been replaced with your metadata" >> $GITHUB_STEP_SUMMARY
+          echo "2. The 'src/package_name' has been renamed." >> $GITHUB_STEP_SUMMARY
+          echo "3. The template instructions have been removed for a clean start." >> $GITHUB_STEP_SUMMARY
