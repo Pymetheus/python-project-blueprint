@@ -57,13 +57,13 @@ jobs:
             -not -path "./.git/*" \
             -not -path "./.github/workflows/*" \
             -print0 | xargs -0 sed -i \
-            -e "s/\\[\\[REPO_NAME\\]\\]/${{ steps.meta.outputs.repo }}/g" \
-            -e "s/\\[\\[DESCRIPTION\\]\\]/${{ steps.meta.outputs.description }}/g" \
-            -e "s/\\[\\[PACKAGE_NAME\\]\\]/${{ steps.meta.outputs.package }}/g" \
-            -e "s/\\package_name/${{ steps.meta.outputs.package }}/g" \
-            -e "s/\\[\\[USERNAME\\]\\]/${{ steps.meta.outputs.user }}/g" \
-            -e "s/\\[\\[EMAIL\\]\\]/${{ steps.load_config.outputs.email }}/g" \
-            -e "s/\\[\\[YEAR\\]\\]/${{ steps.meta.outputs.year }}/g"
+            -e "s|\\[\\[REPO_NAME\\]\\]|${{ steps.meta.outputs.repo }}|g" \
+            -e "s|\\[\\[DESCRIPTION\\]\\]|${{ steps.meta.outputs.description }}|g" \
+            -e "s|\\[\\[PACKAGE_NAME\\]\\]|${{ steps.meta.outputs.package }}|g" \
+            -e "s|\\package_name|${{ steps.meta.outputs.package }}|g" \
+            -e "s|\\[\\[USERNAME\\]\\]|${{ steps.meta.outputs.user }}|g" \
+            -e "s|\\[\\[EMAIL\\]\\]|${{ steps.load_config.outputs.email }}|g" \
+            -e "s|\\[\\[YEAR\\]\\]|${{ steps.meta.outputs.year }}|g"
 
       - name: Rename template package directory
         run: |
@@ -86,9 +86,9 @@ jobs:
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add -A
-          git commit -m "Bootstrap project from template Phase I" || true
+          git commit -m "chore: bootstrap project from template" || true
           git rm .github/workflows/bootstrap.yml .github/bootstrap-config.yml docs/CHECKLIST.md docs/INSTRUCTIONS.md
-          git commit -m "Bootstrap project from template Phase II" || true
+          git commit -m "chore: bootstrap project from template" || true
           git push
 
       - name: Bootstrap Summary
