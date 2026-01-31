@@ -1,3 +1,5 @@
+<div align="center">
+
 # Python Project Blueprint
 
 [![Mypy][mypy-badge]](https://mypy-lang.org)
@@ -17,6 +19,8 @@
 
 [![Bootstrap][bootstrap-badge]](https://github.com/Pymetheus/python-project-blueprint/actions/workflows/bootstrap.yml)
 [![Template][use-template-badge]](https://github.com/new?template_name=python-project-blueprint&template_owner=Pymetheus)
+
+</div>
 
 [mypy-badge]: https://img.shields.io/badge/mypy-checked-4180b1
 [ruff-badge]: https://img.shields.io/badge/ruff-linted-4180b1
@@ -181,6 +185,11 @@ Whether you’re starting a new project or establishing a shared standard, it pr
 - from individual contributors to teams
 - from simple scripts to long-lived services
 
+
+## Contributing
+Your contributions are always welcome!
+- For questions and general ideas, please use [GitHub Discussions](https://github.com/Pymetheus/python-project-blueprint/discussions)
+- For bugs or concrete changes, please open an [Issue](https://github.com/Pymetheus/python-project-blueprint/issues) or [Pull Request](https://github.com/Pymetheus/python-project-blueprint/pulls) instead
 
 ## License
 Licensed under the terms defined in [LICENSE.md](LICENSE.md).
