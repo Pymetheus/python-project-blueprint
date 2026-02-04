@@ -77,7 +77,7 @@ By establishing structure, tooling, and automation upfront, it reduces the need 
   - Cloud-based coverage reporting and visualization with `Codecov`
   - Minimum 80% coverage threshold
   - Fast linting and formatting via `ruff`
-  - Strict static typing with `mypy`
+  - Strict static type checking with `mypy`
 
 - **Security by Default**
   - Static analysis with `bandit`
@@ -127,15 +127,23 @@ Work through the Checklist, which guides you step by step from:
 
 This ensures a consistent, repeatable setup across teams and projects.
 
+> **Note:** *Check out the [example project](https://github.com/Pymetheus/python-project-blueprint-example), to see how it looks like after the bootstrap workflow*
 
 ### 3. Install & Run
 
 Install the project in editable mode with development dependencies:
 ```bash
+# with pip
 pip install -e ".[dev]"
+
+# with uv
+uv sync --extra dev
+
+# with poetry
+poetry install --extras dev
 ```
 
-> **Note:** *You may use any package manager you prefer (pip, uv, poetry); examples in the Checklist.*
+> **Note:** *You may use any package manager you prefer (pip, uv, poetry).*
 
 Set up local git hooks for formatting, linting, and security checks:
 ```bash

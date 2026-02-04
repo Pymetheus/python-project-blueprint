@@ -57,7 +57,7 @@ install your project using the package manager of your choice:
 
 - [ ] **USER:** Install dependencies using **pip**, **uv**, or **poetry**:
   - `pip install -e ".[dev]"`.
-  - `uv pip install -e ".[dev]"`.
+  - `uv sync --extra dev`.
   - `poetry install --extras dev`.
 - [ ] **USER:** Run `prek install`.
 - [ ] **USER:** Run the application `python -m <package_name>.main`.
