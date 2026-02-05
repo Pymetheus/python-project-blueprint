@@ -56,9 +56,9 @@ After cloning the new repository to your local development machine and creating 
 install your project using the package manager of your choice:
 
 - [ ] **USER:** Install dependencies using **pip**, **uv**, or **poetry**:
-  - `pip install -e ".[dev]"`.
-  - `uv sync --extra dev`.
-  - `poetry install --extras dev`.
+  - `pip install -e . --group dev`.
+  - `uv sync`.
+  - `poetry install`.
 - [ ] **USER:** Run `prek install`.
 - [ ] **USER:** Run the application `python -m <package_name>.main`.
 

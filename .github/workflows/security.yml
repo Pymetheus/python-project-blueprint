@@ -42,7 +42,7 @@ jobs:
 
       - name: Install project dependencies
         run: |
-          uv sync --all-extras
+          uv sync
 
       - name: Export dependencies for Snyk
         run: |
@@ -112,7 +112,7 @@ jobs:
       - name: Install project dependencies
         run: |
           uv lock
-          uv sync --all-extras
+          uv sync
 
       - name: Run Bandit security linter
         run: uv run bandit -r src/ -f json -o bandit-report.json
