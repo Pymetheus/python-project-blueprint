@@ -134,13 +134,13 @@ This ensures a consistent, repeatable setup across teams and projects.
 Install the project in editable mode with development dependencies:
 ```bash
 # with pip
-pip install -e ".[dev]"
+pip install -e . --group dev
 
 # with uv
-uv sync --extra dev
+uv sync
 
 # with poetry
-poetry install --extras dev
+poetry install
 ```
 
 > **Note:** *You may use any package manager you prefer (pip, uv, poetry).*

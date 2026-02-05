@@ -14,19 +14,17 @@ classifiers = [
 ]
 
 dependencies = [
-    "pydantic-settings>=2.12.0",  # Managing environment variables
-    "structlog>=25.5.0"           # Managing logging
+    "pydantic-settings>=2.12.0",
+    "structlog>=25.5.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
+test = ["pytest>=9.0.0", "pytest-cov>=7.0.0"]
+quality = ["prek>=0.3.1", "bandit[toml]>=1.7.6", "ruff>=0.14.7", "mypy>=1.19.0"]
 dev = [
-    "pytest>=9.0.0",        # Testing framework
-    "pytest-cov>=7.0.0",    # Coverage plugin for pytest
-    "ruff>=0.14.7",         # Code formatter, Linter, Import sorter
-    "prek>=0.3.1",          # Pre-commit hooks
-    "mypy>=1.19.0",         # Type checker
-    "python-dotenv>=1.2.1", # Managing environment variables
-    "bandit[toml]>=1.7.6",  # Bandit security linter with toml support
+    {include-group = "test"},
+    {include-group = "quality"},
+    "python-dotenv>=1.2.1",
 ]
 
 [project.urls]
@@ -44,7 +42,7 @@ build-backend = "setuptools.build_meta"
 
 
 [tool.setuptools.packages.find]
-where = ["src"]  # Essential for the src-layout to find 'package_name'
+where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
