@@ -32,30 +32,13 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install uv and cache dependencies
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-          cache-dependency-glob: |
-            pyproject.toml
-            uv.lock
-
-      - name: Install project dependencies
-        run: |
-          uv sync
-
-      - name: Export dependencies for Snyk
-        run: |
-          uv export --format requirements-txt --output-file requirements.txt
-          echo "--- Content of requirements.txt ---"
-          cat requirements.txt
-
       - name: Install Snyk CLI
         uses: snyk/actions/setup@master
 
       - name: Install Snyk Python dependencies
         run: |
-          pip install annotated-types pydantic pydantic-core pydantic-settings python-dotenv typing-extensions typing-inspection
+          pip install -e . --group dev
+          pip freeze > requirements.txt
 
       - name: Run Snyk for Open Source Vulnerabilities (OSS)
         run: |
