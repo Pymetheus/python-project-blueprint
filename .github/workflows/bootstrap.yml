@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v6
 
       - name: Collect metadata
@@ -31,11 +31,9 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-          # python package naming
           PACKAGE=$(echo "$REPO" | sed -E 's/[- ]+/_/g' | tr 'A-Z' 'a-z')  # snake_case for python package
           DISTRIBUTION=$(echo "$REPO" | sed -E 's/[_ ]+/-/g' | tr 'A-Z' 'a-z')  # kebab-case for python distribution
 
-          # store values for later steps
           echo "repo=$REPO" >> $GITHUB_OUTPUT
           echo "user=$USER" >> $GITHUB_OUTPUT
           echo "year=$YEAR" >> $GITHUB_OUTPUT
@@ -43,7 +41,7 @@ jobs:
           echo "distribution=$DISTRIBUTION" >> $GITHUB_OUTPUT
 
       - name: Install yq
-        uses: mikefarah/yq@v4.50.1
+        uses: mikefarah/yq@v4.52.2
 
       - name: Load bootstrap config
         id: load_config
@@ -71,11 +69,14 @@ jobs:
             mv src/package_name "src/${{ steps.meta.outputs.package }}"
           fi
 
-      - name: Update pyproject.toml
+      - name: Update pyproject.toml & Docker
         run: |
           sed -i "s/DISTRIBUTION-NAME/${{ steps.meta.outputs.distribution }}/g" pyproject.toml
           sed -i "s/package_name/${{ steps.meta.outputs.package }}/g" pyproject.toml
           sed -i "s/AUTHOR@EXAMPLE.COM/${{ steps.load_config.outputs.email }}/g" pyproject.toml
+          sed -i "s/DISTRIBUTION-NAME/${{ steps.meta.outputs.distribution }}/g" docker/Dockerfile
+          sed -i "s/blueprint-docker/${{ steps.meta.outputs.distribution }}/g" docker/docker-compose.yml
+
 
       - name: Replace Billboard README with Project README
         run: |

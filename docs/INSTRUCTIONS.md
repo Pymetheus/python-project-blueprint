@@ -9,19 +9,20 @@ It reduces setup and automation overhead, allowing teams to focus on application
 
 The **Python Project Blueprint** comes with built-in:
 
-| Feature                      | Description                                                                                                                             |
-|:-----------------------------|:----------------------------------------------------------------------------------------------------------------------------------------|
-| **Project Management**       | `pyproject.toml` as the centralized configuration for packaging, tooling, metadata and dependency management.                           |
-| **Config Management**        | `pydantic-settings` for type-safe environment variable loading and validation.                                                          |
-| **Structured Logging**       | `structlog` integration for JSON streams (production) and colored console output (development).                                         |
-| **Professional Layout**      | `src/` directory structure to ensure package integrity and prevent local import conflicts.                                              |
-| **Comprehensive Testing**    | `pytest` and `Codecov` integration with coverage reporting to enforce coverage thresholds and ensure deep visibility into code health.  |
-| **Static Analysis**          | `ruff` for linting/formatting and `mypy` for strict static type checking.                                                               |
-| **Automated Security**       | `Snyk` (OSS) and `bandit` (SAST) integrated to scan for vulnerabilities and leaked secrets.                                             |
-| **Standardized Governance**  | Automated label synchronization, Issue templates, and Pull Request templates.                                                           |
-| **Local Automation**         | `.pre-commit-config.yaml` for linting, formatting, and security checks with `prek`.                                                     |
-| **CI/CD Pipeline**           | `pr-checks`, `ci`, `cd`, and `security` GitHub Actions workflows.                                                                       |
-| **Instant Bootstrapping**    | A `bootstrap.yml` GitHub Action to rebrand and initialize the repository in seconds.                                                    |
+| Feature                     | Description                                                                                                                                          |
+|:----------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Project Management**      | `pyproject.toml` as the centralized configuration for packaging, tooling, metadata and dependency management.                                        |
+| **Config Management**       | `pydantic-settings` for type-safe environment variable loading and validation.                                                                       |
+| **Structured Logging**      | `structlog` integration for JSON streams (production) and colored console output (development).                                                      |
+| **Professional Layout**     | `src/` directory structure to ensure package integrity and prevent local import conflicts.                                                           |
+| **Comprehensive Testing**   | `pytest` and `Codecov` integration with coverage reporting to enforce coverage thresholds and ensure deep visibility into code health.               |
+| **Static Analysis**         | `ruff` for linting/formatting and `mypy` for strict static type checking.                                                                            |
+| **Automated Security**      | `Snyk` (OSS) and `bandit` (SAST) integrated to scan for vulnerabilities and leaked secrets.                                                          |
+| **Containerization**        | Multi-stage `Docker` build using `uv`, non-root runtime, multi-arch support, and optional GHCR publishing.                                           |
+| **Standardized Governance** | Automated label synchronization, Issue templates, and Pull Request templates.                                                                        |
+| **Local Automation**        | `.pre-commit-config.yaml` for linting, formatting, and security checks with `prek`.                                                                  |
+| **CI/CD Pipeline**          | `pr-checks`, `ci`, `cd`, and `security` GitHub Actions workflows.                                                                                    |
+| **Instant Bootstrapping**   | A `bootstrap.yml` GitHub Action to rebrand and initialize the repository in seconds.                                                                 |
 
 > **Note on Bootstrapping Process:**
 >
@@ -35,6 +36,7 @@ The **Python Project Blueprint** comes with built-in:
 - [Logging Management](#logging-management--artifacts)
 - [Automation & GitHub](#github-actions--automation)
 - [Data & Environment Management](#data--environment-management)
+- [Containerization](#containerization)
 - [Source Code](#source-code-management)
 - [Testing Management](#testing-management)
 - [Project Management with pyproject.toml](#project-management-with-pyprojecttoml)
@@ -151,6 +153,8 @@ The application defaults to `dev` mode.
 To run in `prod` mode, you simply set the `APP_ENV` environment variable.
 The system will then automatically look for `config.prod.toml` and `.env.prod`.
 
+> **Note:** *In the Docker image, APP_ENV is also configurable at build time and runtime.*
+
 **Example: Running in Production Mode**
 ```bash
 # Linux / macOS
@@ -218,7 +222,7 @@ Where applicable, CI/CD workflows use `uv` for dependency installation and resol
 | 1) `.pre-commit-config.yaml` | On every commit                | **Local Guard.** First line of defense.                         |
 | 2) `pr-checks.yml`           | Pull Requests to main          | **Gatekeeping.** Blocks broken or messy code from being merged. |
 | 3) `ci.yml`                  | Push to main & manual          | **Verification.** Proves the package is ready for distribution. |
-| 4) `cd.yml`                  | On completed `CI` workflow run | **Automation.** Handles the releasing (TestPyPI/Releases).      |
+| 4) `cd.yml`                  | On completed `CI` workflow run | **Automation.** Handles the releasing (TestPyPI/GHCR/Releases). |
 | 5) `security.yml`            | Pull Requests to main & manual | **Protection.** Scans for vulnerabilities and leaked secrets.   |
 | 6) Dependabot                | Scheduled                      | **Maintenance.** Automated dependency updates.                  |
 
@@ -336,6 +340,7 @@ jobs:
   verify-version:      # Preventing deployment collisions.
   test:                # Executes the complete test suite with coverage and uploads report to Codecov.
   build-distribution:  # Packages the code into a distributable format.
+  build-docker:        # Builds the image and performs a quick run.
   smoke-test:          # Proves the package is installable and functional.
 ````
 
@@ -351,7 +356,7 @@ By triggering only after a completed CI run, it ensures that only fully vetted a
 >
 > **When:** On completed `CI` workflow run.
 >
-> **Focus:** Publish package and create release.
+> **Focus:** Publish package, push Docker image and create release.
 
 ````yaml
 name: CD
@@ -366,6 +371,7 @@ on:
 jobs:
   download-distribution:  # Retrieves the verified artifacts from the CI pipeline.
   publish-test-pypi:      # Distributes the package to a test registry for validation.
+  publish-docker:         # Pushes the image to the GitHub Container Registry.
   github-release:         # Formalizes the version with a GitHub Release and changelog.
 ````
 > **Note:** *Deployments in `cd.yml` are commented out. Uncomment them once you are ready to deploy.*
@@ -429,14 +435,45 @@ By isolating these from the `src/` directory, the project remains clean, portabl
 * **`notebooks/`**: A dedicated space for exploratory data analysis (EDA), prototyping, and research. Keeping these separate from the source code ensures that "scratchpad" code and heavy output cells do not clutter production logic.
 * **`res/`**: Short for "Resources." This folder houses static assets required by the repository, for example images.
 
-### Containerization & Environment
-* **`docker/`**: Contains the `Dockerfile` and `docker-compose.yml`. Storing these in a dedicated subdirectory rather than the root keeps the workspace organized and allows for multiple environment configurations (e.g., development vs. production) to coexist easily.
-* **`.dockerignore` & `.gitignore`**: These files are precision-tuned to ensure only essential source files enter the build context or the repository. They explicitly exclude local artifacts like `.log/`, `data/`, and `__pycache__`.
-
 ### Documentation & Governance
 * **`docs/`**: The central hub for project knowledge. While the `README.md` serves as the landing page, `docs/` houses deep-dives like `CONTRIBUTING.md`, `SECURITY.md`, and technical specifications.
 * **`LICENSE.md`**: Defines the legal framework and usage permissions for the code.
 * **`README.md`**: The "Front Desk" of the project—focused on high-level overviews, quick-start instructions, and architectural summaries.
+* **`.dockerignore` & `.gitignore`**: These files are precision-tuned to ensure only essential source files enter the build context or the repository. They explicitly exclude local artifacts like `.log/`, `data/`, and `__pycache__`.
+
+---
+
+## Containerization
+The `docker/` directory contains the `Dockerfile` and `docker-compose.yml`,
+focused on reproducible builds, reduced image size and alignment with CI/CD workflows.
+
+### Multi-Stage Docker Build
+The `docker/Dockerfile` uses a multi-stage build strategy:
+
+* **Builder**: Uses an `uv` image for fast dependency resolution.
+* **Runtime**: Uses a slim Python image and runs as a non-root user.
+
+This results in smaller attack surface and secure default container execution.
+
+### Environment Configuration
+The image supports both build-time configuration and runtime overrides for `APP_ENV`.
+
+```dockerfile
+ARG APP_ENV=DEV
+ENV APP_ENV=$APP_ENV
+```
+
+This allows Docker and orchestration platforms to override configuration without modifying the image.
+
+### Docker Compose
+The provided `docker/docker-compose.yml` is intentionally minimal and expandable for additional services such as databases.
+
+### Multi-Architecture Support
+The CD workflow builds images for:
+* **linux/amd64**
+* **linux/arm64**
+
+This allows the image to run on both x86 and ARM environments.
 
 ---
 

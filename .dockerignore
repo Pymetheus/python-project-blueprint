@@ -56,6 +56,7 @@ nosetests.xml
 # We exclude everything not strictly required to run the application
 .log/
 .github/
+docker/
 docs/
 notebooks/
 tests/
@@ -63,9 +64,8 @@ res/
 
 # Ignore everything in config except for the shared templates
 .config/*
-!.config/*.example
-!.config/*.example.*
 !.config/config.dev.toml
+!.config/config.*.toml
 
 # Data Handling (Exclude data from image context)
 data/
@@ -73,8 +73,9 @@ data/
 # Repository Metadata
 .git/
 .gitignore
+.gitattributes
 .dockerignore
 .pre-commit-config.yaml
+codecov.yml
 LICENSE.md
 README.md
-pyproject.toml

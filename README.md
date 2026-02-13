@@ -39,10 +39,10 @@
 [use-template-badge]: https://img.shields.io/badge/Use%20this%20template-006222
 
 
-A **production-ready Python project template** designed to remove setup friction and enforce best practices from the very first commit.
+A **production-ready Python project template** designed to reduce repeated setup tasks and enforce best practices from the very first commit.
 
 The **Python Project Blueprint** gives teams a clean, scalable foundation for Python applications and libraries,
-with configuration management, structured logging, testing, security scanning, and CI/CD already integrated, so you can focus on building your product, not infrastructure.
+with configuration management, structured logging, testing, security scanning, containerization, and CI/CD already integrated, so you can focus more on building your product.
 
 
 > **Quick Start:** Follow the [Checklist](docs/CHECKLIST.md) to start your next Python project in seconds.
@@ -84,13 +84,19 @@ By establishing structure, tooling, and automation upfront, it reduces the need 
   - Secret detection via `detect-secrets`
   - Dependency vulnerability scanning with `Snyk`
 
+- **Containerization**
+  - Multi-stage `Dockerfile` using `uv` for fast builds
+  - `APP_ENV` configurable at build time and runtime
+  - Expandable `docker-compose.yml` for multi-container setups
+  - Publishing images to `GitHub Container Registry`
+
 - **Automated CI/CD**
   - `prek` hooks for faster local enforcement
   - Workflows with fast dependency resolution using `uv`
   - Pull request gatekeeping workflows
-  - CI verification and packaging
-  - Automated CD and GitHub Releases
-  - Dependabot for dependency updates
+  - CI verification, image building and packaging
+  - Automated CD with `TestPyPI`, `GHCR` and `GitHub Release`
+  - Dependency updates with `Dependabot`
 
 - **Governance at Scale**
   - Issue & PR templates
