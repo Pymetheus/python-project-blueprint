@@ -1,12 +1,12 @@
 [project]
 name = "DISTRIBUTION-NAME"
-version = "0.1.0"
-description = "[[DESCRIPTION]]"
+version = "0.0.2"
+description = "Production-ready Python project template with modern tooling, CI/CD, security, and configuration built in."
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.12"
 license = {"file" = "LICENSE.md"}
 authors = [
-    { name = "[[USERNAME]]", email = "AUTHOR@EXAMPLE.COM" }
+    { name = "Pymetheus", email = "github.senate902@passfwd.com" }
 ]
 
 classifiers = [
@@ -30,7 +30,7 @@ dev = [
 [project.urls]
 Homepage = "https://github.com/[[USERNAME]]/[[REPO_NAME]]"
 Repository = "https://github.com/[[USERNAME]]/[[REPO_NAME]]"
-Documentation = "https://github.com/[[USERNAME]]/[[REPO_NAME]]/blob/main/docs/DOCUMENTATION.md"
+Documentation = "https://github.com/[[USERNAME]]/[[REPO_NAME]]/blob/main/docs/INSTRUCTIONS.md"
 Issues = "https://github.com/[[USERNAME]]/[[REPO_NAME]]/issues"
 
 [project.scripts]
