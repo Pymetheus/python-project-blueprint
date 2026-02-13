@@ -1,5 +1,5 @@
 [project]
-name = "DISTRIBUTION-NAME"
+name = "python-project-blueprint"
 version = "0.0.2"
 description = "Production-ready Python project template with modern tooling, CI/CD, security, and configuration built in."
 readme = {file = "README.md", content-type = "text/markdown"}
