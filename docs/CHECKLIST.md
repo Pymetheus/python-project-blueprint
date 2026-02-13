@@ -87,7 +87,7 @@ Otherwise, delete the commented-out lines.
 - [ ] **USER:** Delete `.gitkeep` in `data/`, `notebooks/` and `res/` if applicable, empty directories will disappear from GitHub.
 - [ ] **USER:** Update text in `docs/DOCUMENTATION.md` if applicable.
 - [ ] **USER:** Update License type if applicable.
-- [ ] **USER:** Update dependencies & [project.optional-dependencies] in `pyproject.toml` if applicable.
+- [ ] **USER:** Update dependencies & [dependency-groups] in `pyproject.toml` if applicable.
 - [ ] **USER:** Update text in `README.md`.
 
 
@@ -109,6 +109,8 @@ The workflow automatically updates the following sections:
 
 ### Setting up `docker/`
 - [x] **BOOTSTRAP:** Update [[PACKAGE_NAME]] in `docker/docker-compose.yml` & `docker/Dockerfile`.
+- [x] **BOOTSTRAP:** Update `DISTRIBUTION-NAME` in `docker/Dockerfile` to reflect correct command.
+- [x] **BOOTSTRAP:** Update `blueprint-docker` in `docker/docker-compose.yml` to reflect correct image & container_name.
 
 ### Setting up `docs/`
 - [x] **BOOTSTRAP:** Update [[EMAIL]] in `docs/CODE_OF_CONDUCT.md` to reflect correct contact.

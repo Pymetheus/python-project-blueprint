@@ -27,7 +27,7 @@ def main() -> None:
     """
 
     # Initialize logging first so configuration loading is tracked
-    setup_logging(write_to_disk=True, log_dir=Path("../../.log"))
+    setup_logging(write_to_disk=False, log_dir=Path("../../.log"))
 
     # Load settings
     settings = Settings.load()

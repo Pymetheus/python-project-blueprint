@@ -124,8 +124,25 @@ jobs:
           name: python-package-distributions-${{ github.sha }}
           path: dist/
 
+  build-docker:
+    name: Build Docker Image & Smoke Test
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ github.repository }}:${{ github.sha }} -f docker/Dockerfile .
+
+      - name: Smoke Test Container
+        run: |
+          docker run --rm ${{ github.repository }}:${{ github.sha }}
+
   smoke-test:
-    name: Smoke Test Installation
+    name: Smoke Test Distribution
     runs-on: ubuntu-latest
     needs: build-distribution
     steps:

@@ -1,1 +1,12 @@
 # This docker-compose.yml was generated for [[PACKAGE_NAME]]
+
+services:
+  app:
+    image: blueprint-docker-image:local
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: blueprint-docker-container
+    environment:
+      APP_ENV: DEV
+    working_dir: /app
