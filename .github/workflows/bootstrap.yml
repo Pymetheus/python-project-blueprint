@@ -41,7 +41,7 @@ jobs:
           echo "distribution=$DISTRIBUTION" >> $GITHUB_OUTPUT
 
       - name: Install yq
-        uses: mikefarah/yq@v4.52.2
+        uses: mikefarah/yq@v4.52.4
 
       - name: Load bootstrap config
         id: load_config
