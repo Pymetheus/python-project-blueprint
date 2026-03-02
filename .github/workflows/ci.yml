@@ -79,7 +79,7 @@ jobs:
 
       - name: Upload coverage report as artifact
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == env.PYTHON_VERSION }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report-${{ matrix.python-version }}-${{ matrix.os }}-${{ github.run_id }}
           path: |
@@ -119,7 +119,7 @@ jobs:
           uv build
 
       - name: Upload distribution as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: python-package-distributions-${{ github.sha }}
           path: dist/
