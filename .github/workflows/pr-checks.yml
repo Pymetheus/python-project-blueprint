@@ -160,7 +160,7 @@ jobs:
             .log/coverage/coverage.xml
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           override_pr: ${{ github.event.pull_request.number }}
