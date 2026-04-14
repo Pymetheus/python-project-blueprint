@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check PR has description
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const pr = context.payload.pull_request;
@@ -225,7 +225,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Apply labels based on PR title
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const prTitle = context.payload.pull_request.title.toLowerCase();
