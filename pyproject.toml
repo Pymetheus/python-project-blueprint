@@ -14,7 +14,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "pydantic-settings>=2.12.0",
+    "pydantic-settings>=2.13.1",
     "structlog>=25.5.0",
 ]
 
