@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-test = ["pytest>=9.0.0", "pytest-cov>=7.0.0"]
+test = ["pytest>=9.0.0", "pytest-cov>=7.1.0"]
 quality = ["prek>=0.3.1", "bandit[toml]>=1.7.6", "ruff>=0.14.7", "mypy>=1.19.0"]
 dev = [
     {include-group = "test"},
