@@ -24,7 +24,7 @@ quality = ["prek>=0.3.1", "bandit[toml]>=1.7.6", "ruff>=0.14.7", "mypy>=1.19.0"]
 dev = [
     {include-group = "test"},
     {include-group = "quality"},
-    "python-dotenv>=1.2.1",
+    "python-dotenv>=1.2.2",
 ]
 
 [project.urls]
