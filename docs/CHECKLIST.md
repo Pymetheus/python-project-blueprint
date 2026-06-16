@@ -81,7 +81,7 @@ Otherwise, delete the commented-out lines.
 ### Configuration Management
 - [ ] **USER:** Rename `.config/.env.example` to `.config/.env.dev` and update required secrets.
 - [ ] **USER:** Update required application settings in `.config/config.dev.toml`.
-- [ ] **USER:** Update values to match your `.env.dev` and `.config/config.dev.toml` settings in `src/<your_package_name>/utils/config.py`.
+- [ ] **USER:** Update values to match your `.env.dev` and `.config/config.dev.toml` settings in `src/<your_package_name>/core/config.py`.
 
 ### Project Documents
 - [ ] **USER:** Delete `.gitkeep` in `data/`, `notebooks/` and `res/` if applicable, empty directories will disappear from GitHub.
