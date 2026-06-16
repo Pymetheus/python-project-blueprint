@@ -98,7 +98,7 @@ python-project-blueprint/
 ├── res/                            # Static resources (images, etc.)
 ├── src/
 │   └── package_name                # Core logic
-│       ├── utils/                  # Shared utilities
+│       ├── core/                   # Core utilities
 │       │   ├── __init__.py
 │       │   ├── config.py
 │       │   └── logger.py
@@ -135,7 +135,7 @@ strict naming conventions are enforced.
 This directory orchestrates the application's configuration using a **Layered Configuration Strategy**.
 This ensures a clean separation between structural application settings (TOML) and sensitive credentials (.env).
 
-The configuration loading logic (found in `src/package_name/utils/config.py`) follows this hierarchy, where lower layers override upper ones:
+The configuration loading logic (found in `src/package_name/core/config.py`) follows this hierarchy, where lower layers override upper ones:
 
 1.  **Pydantic Defaults:** Defined in the code (failsafe values).
 2.  **`config.{APP_ENV}.toml`:** Structural configuration (ports, hosts, feature flags). **Committed to Git.**
@@ -179,7 +179,7 @@ This directory is strictly ignored by Git to prevent accidental leakage of logs,
 - **`mypy_cache/`**: Stores incremental type-checking data to significantly speed up subsequent `mypy` runs by only analyzing changed files.
 
 ### Advanced Logging Features
-The logger (configured in `src/package_name/utils/logger.py`) includes several production-grade processors:
+The logger (configured in `src/package_name/core/logger.py`) includes several production-grade processors:
 
 * **Security Masking:** An automated `mask_sensitive_data` processor scans log events for keys like `password` and replaces them with `********` to prevent credential leakage.
 * **Environment Context:** Every log entry is automatically tagged with the current `APP_ENV` via a dedicated processor, making it easy to filter logs.
@@ -486,7 +486,7 @@ By using the **src-layout**, we ensure that the code is only importable when pro
 The internal structure follows a modular design to keep the source code of your application organized:
 
 * **`main.py`**: The central entry point for the application. It orchestrates the startup, including configuration loading and logger initialization.
-* **`utils/`**: A dedicated subdirectory for utilities:
+* **`core/`**: A dedicated subdirectory for utilities:
     * **`config.py`**: Contains the Pydantic-based configuration logic that implements the layered loading strategy.
     * **`logger.py`**: Defines the `structlog` integrated with the standard `logging` module, including security masking.
 

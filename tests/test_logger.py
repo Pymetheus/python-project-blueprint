@@ -3,7 +3,7 @@ import logging
 
 import structlog
 
-from src.package_name.utils.logger import setup_logging
+from src.package_name.core.logger import setup_logging
 
 
 def test_logging_masking_and_env(capsys):
