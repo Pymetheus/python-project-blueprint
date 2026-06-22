@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -97,7 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -125,7 +125,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -160,7 +160,7 @@ jobs:
             .log/coverage/coverage.xml
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           override_pr: ${{ github.event.pull_request.number }}
@@ -173,7 +173,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check for merge conflict markers
         run: |
@@ -189,7 +189,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check for large files
         run: |
@@ -222,7 +222,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Apply labels based on PR title
         uses: actions/github-script@v9
