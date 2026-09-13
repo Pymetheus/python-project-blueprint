@@ -32,7 +32,7 @@ def main() -> None:
     # Load settings
     settings = Settings.load()
 
-    logger.info("Application started.", host=settings.database.host, api_key=settings.api_key)
+    logger.info("Application started.", host=settings.database.host, api_key=settings.api.key)
     logger.info("Reached end of application.")
 
 

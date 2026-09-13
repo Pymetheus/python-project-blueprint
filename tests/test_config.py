@@ -1,66 +1,26 @@
-import tomllib
-from unittest.mock import MagicMock, patch
+import pytest
+from pydantic import ValidationError
 
 from src.package_name.core.config import Settings
 
 
-def test_settings_load_from_toml(clean_env):
-    """Test that settings correctly load and merge TOML data."""
-    mock_toml_dict = {"app_name": "test-app", "database": {"port": 9999}}
+def test_load_uses_the_active_environment_configuration():
+    settings = Settings.load()
 
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch("builtins.open", MagicMock()),
-        patch("tomllib.load", return_value=mock_toml_dict),
-    ):
-        settings = Settings.load()
-        assert settings.app_name == "test-app"
-        assert settings.database.port == 9999
-        assert settings.database.host == "localhost"
+    assert settings.app_name == "[[REPO_NAME]]"
+    assert settings.database.host == "db.develop.com"
 
 
-def test_settings_invalid_toml_fallback(clean_env):
-    """Test fallback to defaults if TOML is corrupted."""
+def test_environment_overrides_toml_configuration(monkeypatch):
+    monkeypatch.setenv("DATABASE__HOST", "override-host")
 
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch("builtins.open", MagicMock()),
-        patch("tomllib.load", side_effect=tomllib.TOMLDecodeError("Bad TOML")),
-    ):
-        settings = Settings.load()
-        assert settings.app_name == "package_name"
+    settings = Settings.load()
+
+    assert settings.database.host == "override-host"
 
 
-def test_settings_unexpected_toml_fallback(clean_env):
-    """Test fallback to defaults if unexpected error occurs."""
+def test_invalid_environment_configuration_is_rejected(monkeypatch):
+    monkeypatch.setenv("DATABASE__PORT", "0")
 
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch("builtins.open", MagicMock()),
-        patch("tomllib.load", side_effect=Exception),
-    ):
-        settings = Settings.load()
-        assert settings.app_name == "package_name"
-
-
-def test_settings_default_fallback(clean_env):
-    """Test that settings return defaults when no file exists."""
-    with patch("pathlib.Path.exists", return_value=False):
-        settings = Settings.load()
-        assert settings.app_name == "package_name"
-
-
-def test_settings_pydantic_validation_error_fallback(clean_env):
-    """Test fallback to defaults if TOML data fails Pydantic validation."""
-
-    invalid_data = {"database": {"port": ["not", "an", "int"]}}
-
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch("builtins.open", MagicMock()),
-        patch("tomllib.load", return_value=invalid_data),
-    ):
-        settings = Settings.load()
-
-        assert settings.database.port == 1111
-        assert settings.app_name == "package_name"
+    with pytest.raises(ValidationError):
+        Settings.load()
