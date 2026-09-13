@@ -66,8 +66,7 @@ jobs:
 
       - name: Install project dependencies
         run: |
-          uv lock
-          uv sync
+          uv sync --locked
 
       - name: Run mypy
         run: uv run mypy src/

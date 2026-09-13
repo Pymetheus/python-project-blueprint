@@ -83,8 +83,7 @@ jobs:
 
       - name: Install project dependencies
         run: |
-          uv lock
-          uv sync
+          uv sync --locked
 
       - name: Run ruff linter
         run: uv run ruff check src/ tests/
@@ -114,8 +113,7 @@ jobs:
 
       - name: Install project dependencies
         run: |
-          uv lock
-          uv sync
+          uv sync --locked
 
       - name: Run mypy
         run: uv run mypy src/
@@ -142,8 +140,7 @@ jobs:
 
       - name: Install project dependencies
         run: |
-          uv lock
-          uv sync
+          uv sync --locked
 
       - name: Run tests with coverage
         run: |
