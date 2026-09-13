@@ -95,7 +95,8 @@ jobs:
 
       - name: Install project dependencies
         run: |
-          uv sync --locked
+          uv lock
+          uv sync
 
       - name: Run Bandit security linter
         run: uv run bandit -r src/ -c pyproject.toml -f json -o bandit-report.json
