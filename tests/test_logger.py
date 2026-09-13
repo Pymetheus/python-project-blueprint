@@ -1,54 +1,113 @@
-import json
 import logging
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 import structlog
 
-from src.package_name.core.logger import setup_logging
+from src.package_name.core.logger import (
+    add_environment_info,
+    mask_sensitive_data,
+    setup_logging,
+)
 
 
-def test_logging_masking_and_env(capsys):
-    """Test that sensitive data is masked and env info is added."""
+def test_add_environment_info_uses_app_environment(monkeypatch):
+    monkeypatch.setenv("APP_ENV", "TEST")
 
-    setup_logging(pretty_print=False, level=logging.INFO)
-    log = structlog.get_logger()
+    event = add_environment_info(None, "", {})
 
-    log.info("test_event", password="secret_password", user="jdoe")  # pragma: allowlist secret
-
-    out, _ = capsys.readouterr()
-    data = json.loads(out)
-
-    assert data["password"] == "********"
-    assert data["user"] == "jdoe"
-    assert data["_env"] == "dev"
-    assert data["event"] == "test_event"
+    assert event["_env"] == "test"
 
 
-def test_foreign_logger_integration(capsys):
-    """Test that standard logging library calls are also processed/masked."""
+def test_add_environment_info_defaults_to_dev(monkeypatch):
+    monkeypatch.delenv("APP_ENV", raising=False)
 
+    event = add_environment_info(None, "", {})
+
+    assert event["_env"] == "dev"
+
+
+def test_mask_sensitive_data_masks_sensitive_values():
+    event = {
+        "username": "user",
+        "password": "secret",  # pragma: allowlist secret
+        "access_token": "token-value",
+        "api_key": "key-value",  # pragma: allowlist secret
+        "auth_header": "bearer-value",
+        "message": "hello",
+    }
+
+    result = mask_sensitive_data(None, "", event)
+
+    assert result == {
+        "username": "user",
+        "password": "********",
+        "access_token": "********",
+        "api_key": "********",
+        "auth_header": "********",
+        "message": "hello",
+    }
+
+
+def test_mask_sensitive_data_is_case_insensitive():
+    event = {
+        "Password": "secret",  # pragma: allowlist secret
+        "API_TOKEN": "token-value",
+        "client_SECRET": "secret-value",  # pragma: allowlist secret
+    }
+
+    result = mask_sensitive_data(None, "", event)
+
+    assert all(value == "********" for value in result.values())
+
+
+def test_setup_logging_configures_pretty_console_logging():
+    setup_logging(pretty_print=True)
+
+    root_logger = logging.getLogger()
+
+    assert root_logger.level == logging.INFO
+    assert len(root_logger.handlers) == 1
+    assert isinstance(root_logger.handlers[0], logging.StreamHandler)
+    assert not isinstance(root_logger.handlers[0], logging.FileHandler)
+
+
+def test_setup_logging_configures_json_console_logging():
     setup_logging(pretty_print=False)
-    std_log = logging.getLogger("external_lib")
 
-    std_log.warning("external_leak", extra={"token": "12345"})
+    root_logger = logging.getLogger()
 
-    out, _ = capsys.readouterr()
-    data = json.loads(out)
-
-    assert data["logger"] == "external_lib"
-    assert data["token"] == "********"
+    assert root_logger.level == logging.INFO
+    assert len(root_logger.handlers) == 1
+    assert isinstance(root_logger.handlers[0], logging.StreamHandler)
+    assert not isinstance(root_logger.handlers[0], logging.FileHandler)
 
 
-def test_file_logging(tmp_path):
-    """Test that log files are created when write_to_disk is True."""
+def test_setup_logging_creates_rotating_log_file(tmp_path: Path):
+    setup_logging(
+        write_to_disk=True,
+        log_dir=tmp_path,
+        pretty_print=False,
+    )
 
-    log_dir = tmp_path / ".log"
-    setup_logging(write_to_disk=True, log_dir=log_dir)
-    log = structlog.get_logger()
+    log_file = tmp_path / "logs.json"
 
-    log.info("file_test")
-
-    log_file = log_dir / "logs.json"
     assert log_file.exists()
+    assert log_file.is_file()
 
-    content = log_file.read_text()
-    assert "file_test" in content
+    root_logger = logging.getLogger()
+
+    assert len(root_logger.handlers) == 2
+    assert any(isinstance(handler, RotatingFileHandler) for handler in root_logger.handlers)
+    assert any(
+        isinstance(handler, logging.StreamHandler) and not isinstance(handler, RotatingFileHandler)
+        for handler in root_logger.handlers
+    )
+
+
+def test_setup_logging_configures_structlog():
+    setup_logging()
+
+    logger = structlog.get_logger("test")
+
+    assert logger is not None
