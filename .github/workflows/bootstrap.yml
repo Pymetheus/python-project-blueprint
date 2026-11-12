@@ -20,7 +20,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install yq
-        uses: mikefarah/yq@v4.54.1
+        uses: mikefarah/yq@v4.54.3
 
       - name: Collect repository description
         id: meta
