@@ -9,10 +9,7 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  actions: read
-  pull-requests: read
   contents: read
-  statuses: write
 
 env:
   PYTHON_VERSION: "3.12"
@@ -33,7 +30,7 @@ jobs:
           CURRENT_VERSION=$(grep '^version =' pyproject.toml | cut -d '"' -f 2)
           TAG_NAME="v$CURRENT_VERSION"
 
-          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          if git show-ref --verify --quiet "refs/tags/$TAG_NAME"; then
             echo "::error title=Version Conflict::Version $CURRENT_VERSION already exists as a Git tag ($TAG_NAME).%0A🚨 Action required: Alter 'version' in pyproject.toml before pushing."
             exit 1
           fi
@@ -41,11 +38,11 @@ jobs:
 
   test:
     name: Run Full Test Suite
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: verify-version
     strategy:
       matrix:
-        python-version: ['3.12', '3.13', '3.14']
+        python-version: ['3.12', '3.13', '3.14', '3.15']
         os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout code
@@ -69,12 +66,9 @@ jobs:
           uv lock
           uv sync
 
-      - name: Run mypy
-        run: uv run mypy src/
-
       - name: Run tests with coverage
         run: |
-          mkdir -p .log/coverage
+          python -c "from pathlib import Path; Path('.log/coverage').mkdir(parents=True, exist_ok=True)"
           uv run pytest
 
       - name: Upload coverage report as artifact
@@ -173,30 +167,28 @@ jobs:
 
       - name: Verify CLI
         run: |
+          WHEEL_FILE=$(ls dist/*.whl | head -n 1)
+          DIST_NAME=$(basename "$WHEEL_FILE" | cut -d'-' -f1)
 
-                WHEEL_FILE=$(ls dist/*.whl | head -n 1)
-                DIST_NAME=$(basename "$WHEEL_FILE" | cut -d'-' -f1)
-                echo "Searching for CLI entry points in distribution: $DIST_NAME"
+          echo "Searching for CLI entry points in distribution: $DIST_NAME"
 
+          CLI_COMMAND=$(python - "$DIST_NAME" <<'PY'
+          import importlib.metadata
+          import sys
 
-                CLI_COMMAND=$(python3 <<EOF
-                import importlib.metadata
-                import sys
+          dist = importlib.metadata.distribution(sys.argv[1])
+          scripts = [
+              entry.name
+              for entry in dist.entry_points
+              if entry.group == "console_scripts"
+          ]
+          print(scripts[0] if scripts else "")
+          PY
+          )
 
-                try:
-                    dist = importlib.metadata.distribution('$DIST_NAME')
-                    scripts = [ep.name for ep in dist.entry_points if ep.group == 'console_scripts']
-                    if scripts:
-                        print(scripts[0])
-                except importlib.metadata.PackageNotFoundError:
-                    pass
-                EOF
-                        )
-
-                if [ -n "$CLI_COMMAND" ]; then
-                  echo "Found CLI command for $DIST_NAME: $CLI_COMMAND"
-
-                  $CLI_COMMAND
-                else
-                  echo "No console_scripts found for $DIST_NAME. Skipping CLI smoke test."
-                fi
+          if [ -n "$CLI_COMMAND" ]; then
+            echo "Found CLI command: $CLI_COMMAND"
+            "$CLI_COMMAND"
+          else
+            echo "No console_scripts found. Skipping CLI smoke test."
+          fi

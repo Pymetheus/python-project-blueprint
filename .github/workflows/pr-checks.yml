@@ -20,7 +20,6 @@ permissions:
   pull-requests: write
   contents: read
   issues: write
-  statuses: write
 
 env:
   PYTHON_VERSION: "3.12"
@@ -177,9 +176,7 @@ jobs:
 
       - name: Check for merge conflict markers
         run: |
-          if git grep -l '<<<<<<< HEAD' -- ':!.github/' || \
-             git grep -l '>>>>>>> ' -- ':!.github/' || \
-             git grep -l '=======' -- ':!.github/' ; then
+          if git grep -nE '^(<<<<<<< |>>>>>>> |\|\|\|\|\|\|\| )' -- ':!.github/'; then
             echo "Merge conflict markers found!"
             exit 1
           fi
@@ -221,33 +218,32 @@ jobs:
     needs: pr-checks-summary
     continue-on-error: true
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
       - name: Apply labels based on PR title
         uses: actions/github-script@v9
         with:
           script: |
-            const prTitle = context.payload.pull_request.title.toLowerCase();
-            const labels = [];
+            const prTitle = context.payload.pull_request.title;
 
-            if (prTitle.startsWith('feat:')) labels.push('feature');
-            else if (prTitle.startsWith('fix:')) labels.push('bug');
-            else if (prTitle.startsWith('docs:')) labels.push('documentation');
-            else if (prTitle.startsWith('style:')) labels.push('enhancement');
-            else if (prTitle.startsWith('refactor:')) labels.push('refactor');
-            else if (prTitle.startsWith('perf:')) labels.push('enhancement');
-            else if (prTitle.startsWith('test:')) labels.push('enhancement');
-            else if (prTitle.startsWith('build:')) labels.push('enhancement');
-            else if (prTitle.startsWith('ci:')) labels.push('ci');
-            else if (prTitle.startsWith('chore:')) labels.push('enhancement');
+            const mappings = [
+              { prefixes: ['feat'], label: 'feature' },
+              { prefixes: ['fix'], label: 'bug' },
+              { prefixes: ['docs'], label: 'documentation' },
+              { prefixes: ['style', 'perf', 'test', 'build', 'chore'], label: 'enhancement' },
+              { prefixes: ['refactor'], label: 'refactor' },
+              { prefixes: ['ci'], label: 'ci' },
+            ];
 
-            if (labels.length > 0) {
-              core.info(`Applying labels: ${labels.join(', ')}`);
+            const mapping = mappings.find(({ prefixes }) =>
+              prefixes.some(prefix =>
+                prTitle.startsWith(`${prefix}:`) || prTitle.startsWith(`${prefix}(`)
+              )
+            );
+
+            if (mapping) {
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number,
-                labels: labels
+                issue_number: context.issue.number,
+                labels: [mapping.label],
               });
             }

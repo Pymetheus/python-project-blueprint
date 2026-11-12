@@ -1,3 +1,3 @@
 import os
 
-os.environ.setdefault("APP_ENV", "dev")
+os.environ["APP_ENV"] = "dev"

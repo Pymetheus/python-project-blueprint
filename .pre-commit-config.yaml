@@ -10,7 +10,7 @@ repos:
       - id: check-executables-have-shebangs
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.7
+    rev: v0.15.10
     hooks:
       - id: ruff
         args: [--fix]
@@ -23,7 +23,7 @@ repos:
       - id: detect-secrets
 
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.9
+    rev: 1.9.4
     hooks:
       - id: bandit
         args: ["-c", "pyproject.toml"]

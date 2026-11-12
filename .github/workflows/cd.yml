@@ -5,17 +5,12 @@ on:
     workflows: [ "CI" ]
     types:
     - completed
-  workflow_dispatch: {}
+    branches:
+      - main
 
 permissions:
-  contents: write
-  packages: write
-  id-token: write
+  contents: read
   actions: read
-  attestations: write
-
-env:
-  PYTHON_VERSION: "3.12"
 
 jobs:
   download-distribution:
@@ -24,9 +19,6 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
       - name: Download build artifacts
         uses: actions/download-artifact@v8
         with:
@@ -48,10 +40,15 @@ jobs:
 #    name: Build and publish Docker Image
 #    runs-on: ubuntu-latest
 #    needs: download-distribution
+#    permissions:
+#      contents: read
+#      packages: write
 #
 #    steps:
 #      - name: Checkout code
 #        uses: actions/checkout@v7
+#        with:
+#          ref: ${{ github.event.workflow_run.head_sha }}
 #
 #      - name: Normalize repository name
 #        id: repo
@@ -91,6 +88,9 @@ jobs:
 #    name: Publish to TestPyPI
 #    runs-on: ubuntu-latest
 #    needs: download-distribution
+#    permissions:
+#      actions: read
+#      id-token: write
 #
 #    environment:
 #      name: testpypi
@@ -117,10 +117,15 @@ jobs:
 #    name: Create GitHub Release
 #    runs-on: ubuntu-latest
 #    needs: [publish-docker, publish-test-pypi]
+#    permissions:
+#      actions: read
+#      contents: write
 #
 #    steps:
 #      - name: Checkout code
 #        uses: actions/checkout@v7
+#        with:
+#          ref: ${{ github.event.workflow_run.head_sha }}
 #
 #      - name: Download build artifacts
 #        uses: actions/download-artifact@v8
