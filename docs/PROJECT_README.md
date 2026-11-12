@@ -1,56 +1,96 @@
 # [[REPO_NAME]]
 
-> Description of the project
-> Lorem ipsum
+> [[DESCRIPTION]]
 
 ## Table of Contents
-- [Instructions](#instructions)
+
+- [Overview](#overview)
 - [Requirements](#requirements)
 - [Getting started](#getting-started)
   - [Installation](#installation)
+  - [Configuration](#configuration)
   - [Usage](#usage)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Instructions
+## Overview
 
-This section should explain how to use the project.
-Include steps for running scripts, using features, or configuring the environment.
+Describe the purpose of this project, the problem it solves and its main capabilities. Replace this guidance with a concise project-specific overview.
 
 ## Requirements
 
-List the software, libraries, or tools needed to run the project.
+- Python 3.12 or newer.
+
+Add any application-specific requirements here.
 
 ## Getting started
 
-Step-by-step instructions to set up the project on a local machine for development and testing.
-
 ### Installation
 
-1. Clone the repository
-2. Install dependencies:
+Clone the repository and change into the project directory:
 
 ```bash
-pip install .
+git clone https://github.com/[[USERNAME]]/[[REPO_NAME]].git
+cd [[REPO_NAME]]
 ```
+
+Create a virtual environment and install the project with its development dependencies.
+
+Using `uv`:
+
+```bash
+uv sync
+```
+
+Using `pip`:
+
+```bash
+python -m venv .venv
+# Activate the environment using the command appropriate for your shell.
+python -m pip install -e . --group dev
+```
+
+### Configuration
+
+The application reads environment-specific settings from `.config/` by default:
+
+- `config.dev.toml` contains non-secret development settings.
+- `.env.dev` can contain local secrets and environment-variable overrides.
+
+Copy `.config/.env.example` to `.config/.env.dev` and update its values if your application needs them. Do not commit real credentials.
+
+Set `APP_ENV` to select another environment.
 
 ### Usage
 
-Provide examples of how to run the main script or application.
+Run the application as a Python module:
+
+```bash
+python -m package_name.main
+```
+
+The package also exposes the installed console command:
+
+```bash
+DISTRIBUTION-NAME
+```
+
+Replace the example behavior in `src/package_name/main.py` with your application's entry-point logic.
 
 ## Roadmap
 
-Outline planned features, improvements, or versions. Use checkboxes to show progress if applicable.
-- [ ] Step 1
-- [ ] Step 2
-- [ ] Step 3
+Outline planned features, improvements or releases. Use checkboxes to track progress where useful.
+
+- [ ] Add project-specific roadmap item.
+- [ ] Add project-specific roadmap item.
 
 ## Contributing
 
-Contributions to this project are welcome! If you would like to contribute, please open an issue to discuss potential changes or submit a pull request.
-For more details please visit the [contributing page](docs/CONTRIBUTING.md).
+Contributions are welcome. Please open an issue to discuss substantial changes or submit a pull request.
+
+For details, see [the contributing guide](docs/CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE.md). You are free to use, modify, and distribute this code as permitted by the license.
+This project is licensed under the terms in [LICENSE.md](LICENSE.md). Review that file for the applicable permissions and conditions.

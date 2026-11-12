@@ -1,43 +1,37 @@
 # Developer Guide & Architecture
-This document explains the architectural decisions, automation, and conventions built into the Python Project Blueprint.
-For setup steps, follow the [Checklist](CHECKLIST.md).
 
+This document explains the architecture, configuration, tooling and automation included in the Python Project Blueprint. For the setup sequence, follow the [Checklist](CHECKLIST.md).
 
-This template provides a production-ready foundation for Python libraries, internal services, APIs, data pipelines, and small-to-medium backend applications.
-It reduces setup and automation overhead, allowing teams to focus on application logic while enforcing industry best practices from the first commit.
+The blueprint provides a reusable starting point for Python packages and applications. It includes packaging, settings management, logging, tests, quality tools, security checks, container configuration and GitHub automation. Application-specific architecture and infrastructure are intentionally left to the project owner.
 
+The **Python Project Blueprint** includes:
 
-The **Python Project Blueprint** comes with built-in:
+| Feature | Description                                                                                                                                                             |
+|:--|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Project Management** | `pyproject.toml` centralizes package metadata, dependency groups and tool configuration.                                                                                |
+| **Configuration** | `pydantic-settings` loads and validates values from environment variables, dotenv and TOML files.                                                                       |
+| **Structured Logging** | `structlog` integrates with standard logging and supports human-readable console output, JSON output and optional rotating file logs.                                   |
+| **Package Layout** | A `src/` layout separates the importable package from repository-level files.                                                                                           |
+| **Testing** | `pytest` and `pytest-cov` run tests and enforce a minimum coverage threshold.                                                                                           |
+| **Static Analysis** | `Ruff` provides linting and formatting; `Mypy` performs static type checking.                                                                                           |
+| **Security** | `Snyk`, `Bandit` and `TruffleHog` are used in the security workflow; `detect-secrets` is included as a local hook.                                                      |
+| **Containerization** | A multi-stage `Docker` build installs runtime dependencies with `uv` and runs the application as a non-root user.                                                       |
+| **Governance** | Issue and pull-request templates, CODEOWNERS and label synchronization support repository maintenance.                                                                  |
+| **Local Hooks** | `.pre-commit-config.yaml` defines hooks for linting, formatting, and security checks using `prek`.                                                                      |
+| **CI/CD** | GitHub Actions validate pull requests, test the project, build distributions and smoke-test the Docker image. Publishing jobs in CD are provided as commented examples. |
+| **Bootstrapping** | A one-time GitHub Actions workflow personalizes the template and removes bootstrap-only files.                                                                          |
 
-| Feature                     | Description                                                                                                                                          |
-|:----------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Project Management**      | `pyproject.toml` as the centralized configuration for packaging, tooling, metadata and dependency management.                                        |
-| **Config Management**       | `pydantic-settings` for type-safe environment variable loading and validation.                                                                       |
-| **Structured Logging**      | `structlog` integration for JSON streams (production) and colored console output (development).                                                      |
-| **Professional Layout**     | `src/` directory structure to ensure package integrity and prevent local import conflicts.                                                           |
-| **Comprehensive Testing**   | `pytest` and `Codecov` integration with coverage reporting to enforce coverage thresholds and ensure deep visibility into code health.               |
-| **Static Analysis**         | `ruff` for linting/formatting and `mypy` for strict static type checking.                                                                            |
-| **Automated Security**      | `Snyk` (OSS) and `bandit` (SAST) integrated to scan for vulnerabilities and leaked secrets.                                                          |
-| **Containerization**        | Multi-stage `Docker` build using `uv`, non-root runtime, multi-arch support, and optional GHCR publishing.                                           |
-| **Standardized Governance** | Automated label synchronization, Issue templates, and Pull Request templates.                                                                        |
-| **Local Automation**        | `.pre-commit-config.yaml` for linting, formatting, and security checks with `prek`.                                                                  |
-| **CI/CD Pipeline**          | `pr-checks`, `ci`, `cd`, and `security` GitHub Actions workflows.                                                                                    |
-| **Instant Bootstrapping**   | A `bootstrap.yml` GitHub Action to rebrand and initialize the repository in seconds.                                                                 |
-
-> **Note on Bootstrapping Process:**
->
-> *Some files and workflows (e.g. `bootstrap.yml`, `CHECKLIST.md`, `INSTRUCTIONS.md`) exist only to initialize the repository and are automatically removed after the bootstrap process completes.*
->
-> *See the [Checklist](/docs/CHECKLIST.md) for more details*
+> **Bootstrapping note:** `bootstrap.yml`, `bootstrap-config.yml`, `bootstrap.py`, `CHECKLIST.md` and this `INSTRUCTIONS.md` file are used to initialize a repository. The bootstrap workflow removes them after initialization. See the [Checklist](CHECKLIST.md) before running the workflow.
 
 ## Table of Contents
+
 - [Template Architecture Overview](#template-architecture-overview)
 - [Configuration Management](#configuration-management)
-- [Logging Management](#logging-management--artifacts)
-- [Automation & GitHub](#github-actions--automation)
+- [Logging Management & Artifacts](#logging-management--artifacts)
+- [GitHub Actions & Automation](#github-actions--automation)
 - [Data & Environment Management](#data--environment-management)
 - [Containerization](#containerization)
-- [Source Code](#source-code-management)
+- [Source Code Management](#source-code-management)
 - [Testing Management](#testing-management)
 - [Project Management with pyproject.toml](#project-management-with-pyprojecttoml)
 
@@ -45,516 +39,436 @@ The **Python Project Blueprint** comes with built-in:
 
 ## Template Architecture Overview
 
-The blueprint adopts a **Modular Layered Architecture** designed to scale from a simple script to a complex enterprise application.
-By strictly separating source code from environment concerns (configuration, data, logs),
-the project ensures that components can be swapped, updated, or scaled independently without side effects.
+The blueprint separates importable source code from repository-level configuration, data, logs and automation. This keeps the package focused while giving developers clear locations for project assets and tooling.
 
-This structure is optimized for dual-use development:
-* **As a Package:** The `src/` layout and `pyproject.toml` ensure your code is ready for distribution on PyPI or internal registries.
-* **As an Application:** The type-safe configuration and structured logging provide the robust infrastructure required for stable production deployments and cloud-native environments.
+It can be used as the starting point for either:
+- **A package:** the `src/` layout and build configuration support wheel and source-distribution builds.
+- **An application:** the settings and logging modules provide reusable startup infrastructure.
 
-```bash
+```text
 python-project-blueprint/
 ├── .config/
-│   ├── .env.example                # Template for environment variables
-│   └── config.dev.toml             # Development-specific configuration
+│   ├── .env.example
+│   └── config.dev.toml
 ├── .github/
-│   ├── ISSUE_TEMPLATE/             # Standardized bug & feature tracking
-│   │   ├── bug_report.md
-│   │   └── feature_request.md
-│   ├── workflows/                  # Automation (CI/CD, Security, Bootstrap)
-│   │   ├── bootstrap.yml           # Deleted after bootstrap process
+│   ├── ISSUE_TEMPLATE/
+│   ├── scripts/
+│   │   └── bootstrap.py
+│   ├── workflows/
+│   │   ├── bootstrap.yml
 │   │   ├── cd.yml
 │   │   ├── ci.yml
 │   │   ├── label-sync.yml
 │   │   ├── pr-checks.yml
 │   │   └── security.yml
-│   ├── bootstrap-config.yml        # Deleted after bootstrap process
-│   ├── CODEOWNERS                  # Access control and review authority
-│   ├── dependabot.yml              # Automated dependency updates
-│   ├── labels.yml                  # Standardized issue/PR labeling
-│   └── PULL_REQUEST_TEMPLATE.md    # PR quality checklist
-├── .log/                           # Local artifacts (Logs, Coverage, Cache)
-│   ├── coverage/
-│   │   ├── htmlcov/
-│   │   ├── .coverage
-│   │   └── coverage.xml
-│   ├── mypy_cache/
-│   └── logs.json
-├── data/                           # Local data storage (Raw/Processed)
+│   ├── bootstrap-config.yml
+│   ├── CODEOWNERS
+│   ├── dependabot.yml
+│   ├── labels.yml
+│   └── PULL_REQUEST_TEMPLATE.md
+├── data/
 │   ├── processed/
 │   └── raw/
-├── docker/                         # Containerization logic
+├── docker/
 │   ├── Dockerfile
 │   └── docker-compose.yml
-├── docs/                           # Project & Governance documentation
-│   ├── CHECKLIST.md                # Deleted after bootstrap process
+├── docs/
+│   ├── CHECKLIST.md
 │   ├── CODE_OF_CONDUCT.md
 │   ├── CONTRIBUTING.md
 │   ├── DOCUMENTATION.md
-│   ├── INSTRUCTIONS.md             # Deleted after bootstrap process
+│   ├── INSTRUCTIONS.md
+│   ├── PROJECT_README.md
 │   └── SECURITY.md
-├── notebooks/                      # Exploratory research & prototyping
-├── res/                            # Static resources (images, etc.)
+├── notebooks/
+├── res/
 ├── src/
-│   └── package_name                # Core logic
-│       ├── core/                   # Core utilities
+│   └── package_name/
+│       ├── core/
 │       │   ├── __init__.py
 │       │   ├── config.py
 │       │   └── logger.py
 │       ├── __init__.py
 │       └── main.py
-├── tests/                          # Test suite (Pytest)
+├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
 │   ├── test_config.py
 │   ├── test_logger.py
 │   └── test_main.py
-├── .dockerignore                   # Docker build exclusions
-├── .gitignore                      # Git exclusions
-├── .pre-commit-config.yaml         # Local linting/security gates with prek
-├── codecov.yml                     # Codecov configuration file
-├── LICENSE.md                      # Usage permissions
-├── pyproject.toml                  # Central configuration hub (Dependencies & Tools)
-└── README.md                       # Project landing page
+├── .dockerignore
+├── .gitignore
+├── .pre-commit-config.yaml
+├── codecov.yml
+├── LICENSE.md
+├── README.md
+└── pyproject.toml
 ```
 
-### Naming convention
-To ensure consistency across the stack and avoid import conflicts between local folders and installed packages,
-strict naming conventions are enforced.
+The `.log/` directory is generated locally by tests, tools or the application. It is ignored by Git and is not a tracked source directory.
 
-| Used for                            | Style      | Example                            |
-|-------------------------------------|------------|------------------------------------|
-| GitHub repo, PyPI name, CLI command | kebab-case | `python-project-blueprint`         |
-| Python package, Python files        | snake_case | `package_name`, `template_code.py` |
-| Docker image                        | kebab-case | `template-app:latest`              |
+### Naming convention
+
+The bootstrap workflow derives the distribution name and Python package name from the new repository name. A lowercase, hyphen-separated repository name is recommended for readability; the workflow normalizes the derived distribution and package names.
+
+| Used for | Style | Example |
+|:--|:--|:--|
+| Repository name (recommended) | lowercase, hyphen-separated | `my-python-project` |
+| Distribution name and console command | lowercase, hyphen-separated | `my-python-project` |
+| Python package and Python modules | lowercase snake_case | `my_python_project`, `main.py` |
+| Docker image and container names | lowercase, hyphen-separated | `my-python-project:latest` |
+
+The distribution name and import package name are separate concepts. A distribution may use hyphens while its import package uses underscores.
 
 ---
 
 ## Configuration Management
-This directory orchestrates the application's configuration using a **Layered Configuration Strategy**.
-This ensures a clean separation between structural application settings (TOML) and sensitive credentials (.env).
 
-The configuration loading logic (found in `src/package_name/core/config.py`) follows this hierarchy, where lower layers override upper ones:
+Configuration is implemented in `src/package_name/core/config.py` using `pydantic-settings`. TOML files hold non-secret application settings, while dotenv files can hold local development secrets.
 
-1.  **Pydantic Defaults:** Defined in the code (failsafe values).
-2.  **`config.{APP_ENV}.toml`:** Structural configuration (ports, hosts, feature flags). **Committed to Git.**
-3.  **`.env.{APP_ENV}`:** Secrets and credentials (API Keys, DB Passwords). **Ignored by Git.**
-4.  **System Environment Variables:** OS-level overrides (highest priority, ideal for Docker/Kubernetes).
+### Configuration sources and precedence
 
-### Included Files
-- **`config.dev.toml`**: The default configuration for local development.
-- **`.env.example`**: A template listing placeholder secrets.
+The configuration loading logic follows this hierarchy, from highest to lowest priority:
 
-> **Note:** *Copy `.env.example` to create your local `.env.dev` (or `.env.{APP_ENV}` for other environments).*
+1. **Process environment variables** – Variables provided by the operating system, shell, Docker or deployment environment.
+2. **The environment-specific dotenv file** – Variables loaded from the corresponding .env file, when available.
+3. **The environment-specific TOML file** – Settings loaded from the corresponding TOML configuration file.
+4. **Pydantic model defaults** – Default values defined in the settings models.
 
-### Switching Environments
-The application defaults to `dev` mode.
-To run in `prod` mode, you simply set the `APP_ENV` environment variable.
-The system will then automatically look for `config.prod.toml` and `.env.prod`.
+For example, `DATABASE__HOST` overrides `database.host` from the TOML file. The nested environment variable delimiter is `__`.
 
-> **Note:** *In the Docker image, APP_ENV is also configurable at build time and runtime.*
+### Included files
 
-**Example: Running in Production Mode**
+- **`.config/config.dev.toml`** contains the development defaults for `app_name`, database connection settings and API base URL.
+- **`.config/.env.example`** provides example environment variables. It is not loaded automatically; copy it to `.config/.env.dev` for local development.
+
+The dotenv file is ignored by Git. Do not commit real credentials.
+
+### Selecting an environment
+
+`APP_ENV` selects the files to load. It defaults to `dev` and is normalized to lowercase. For example, `APP_ENV=prod` selects:
+
+- `.config/config.prod.toml`
+- `.config/.env.prod`
+
+Set `APP_ENV` before the application imports `package_name.core.config`, because the selected environment and configuration paths are determined when that module is imported.
+
+`APP_CONFIG_DIR` overrides the default `.config` directory. Relative paths are resolved from the process's current working directory.
+
+**Linux / macOS:**
+
 ```bash
-# Linux / macOS
-APP_ENV=prod
-pip install -e .
-python -m package_name.main
+APP_ENV=prod python -m package_name.main
+```
 
-# Windows (PowerShell)
+**Windows PowerShell:**
+
+```powershell
 $env:APP_ENV = "prod"
-pip install -e .
 python -m package_name.main
 ```
+
+The example project defaults to development settings. Production deployments should normally provide configuration through process environment variables rather than relying on a local dotenv file.
 
 ---
 
 ## Logging Management & Artifacts
-A dedicated workspace for local artifacts and build metadata.
-This directory is strictly ignored by Git to prevent accidental leakage of logs, local paths, or coverage reports.
 
-- **`logs.json`**: When `write_to_disk=True` is enabled in your configuration, `structlog` streams machine-readable JSON logs here.
-- **`coverage/`**: Contains HTML and XML reports generated by `pytest-cov`, allowing you to visualize untested code paths in your browser.
-- **`mypy_cache/`**: Stores incremental type-checking data to significantly speed up subsequent `mypy` runs by only analyzing changed files.
+Logging is configured in `src/package_name/core/logger.py` using `structlog` integrated with Python's standard `logging` module.
 
-### Advanced Logging Features
-The logger (configured in `src/package_name/core/logger.py`) includes several production-grade processors:
+### Console and file output
 
-* **Security Masking:** An automated `mask_sensitive_data` processor scans log events for keys like `password` and replaces them with `********` to prevent credential leakage.
-* **Environment Context:** Every log entry is automatically tagged with the current `APP_ENV` via a dedicated processor, making it easy to filter logs.
-* **Dual Rendering:**
-    * **Development:** Uses `ConsoleRenderer` for colorized, human-readable output.
-    * **Production:** Uses `JSONRenderer` for machine-readable logs, structured for easy parsing by log aggregators.
+`setup_logging()` selects the console renderer through its `pretty_print` argument:
+
+- `pretty_print=True` uses `structlog.dev.ConsoleRenderer` for human-readable console output.
+- `pretty_print=False` uses `structlog.processors.JSONRenderer` for JSON output. This is the function's default.
+
+File logging is disabled by default. Set `write_to_disk=True` to create `.log/logs.json`. The file handler rotates at 10 MB and retains three backup files. The console handler remains enabled.
+
+### Logging processors
+
+The configured processor chain includes:
+
+- **Environment context:** adds `_env` using the normalized `APP_ENV` value.
+- **Sensitive-field masking:** masks top-level event fields when their key contains one of the configured case-insensitive keywords: `password`, `token`, `secret`, `key` or `auth`.
+- **Standard metadata:** adds logger name, log level and an ISO-formatted timestamp, and formats exception information.
+
+Masking is based on event-field names. It is not a general-purpose recursive secret scanner; avoid logging credentials or sensitive payloads in the first place.
+
+### Local artifacts
+
+The `.log/` directory is ignored by Git. Depending on which tools are run and how logging is configured, it can contain:
+- `logs.json` and rotated log files;
+- `.log/coverage/` with coverage data and HTML/XML reports;
+- `.log/mypy_cache/` with Mypy incremental cache data.
 
 ---
 
 ## GitHub Actions & Automation
-This project leverages GitHub Actions and prek hooks to automate the entire development lifecycle, ensuring that high standards are maintained by default.
-It houses the governance documents (templates) and the CI/CD pipelines (workflows) that enforce code quality, security, and release standards automatically.
-By using these tools, the project ensures that every contribution is vetted before it touches the `main` branch.
+
+The repository uses GitHub Actions for pull-request checks, CI, security scanning, label synchronization and the optional release pipeline. The default branch strategy is GitHub Flow, with `main` as the target branch. Some workflows contain commented branch filters that can be enabled if the project adopts additional branches.
 
 ### Project Governance Automation
-To scale collaboration and maintain a clean repository, the following tools are integrated:
 
-* **Standardized Entry Points:** `ISSUE_TEMPLATE/` and `PULL_REQUEST_TEMPLATE.md` ensure that every **bug report** or **feature request** contains the necessary technical context (logs, environment info, reproduction steps).
-* **Automated Quality Gates:** The `pr-checks.yml` workflow uploads test results to `Codecov` to enforce coverage thresholds and provide automated PR comments that visualize testing gaps.
-* **Automated Labeling (`label-sync.yml`):** Automatically synchronizes repository labels based on a central `labels.yml` file, keeping the project organized and searchable.
-* **Access Control (`CODEOWNERS`):** Defines which team members are responsible for specific parts of the codebase, automatically assigning them as reviewers for relevant Pull Requests.
-
----
+- **Issue templates:** `.github/ISSUE_TEMPLATE/` provides bug-report and feature-request templates.
+- **Pull-request template:** `.github/PULL_REQUEST_TEMPLATE.md` prompts contributors to describe changes and testing.
+- **CODEOWNERS:** `.github/CODEOWNERS` assigns repository ownership and review responsibility.
+- **Label synchronization:** `label-sync.yml` synchronizes repository labels from `.github/labels.yml` when that file changes on `main`, or when manually dispatched.
+- **Dependabot:** `.github/dependabot.yml` checks Python dependencies, GitHub Actions and Docker dependencies weekly.
 
 ### CI/CD Workflow Automation
-The repository includes a suite of production-grade automation workflows and services.
-These are optimized for **GitHub Flow** (feature branches merging into `main`), ensuring a fast and stable release cycle.
-Where applicable, CI/CD workflows use `uv` for dependency installation and resolution to significantly reduce runtime and GitHub Actions minutes.
 
-
-> **Note on Branching Strategy:**
->
-> *While optimized for GitHub Flow, the workflows are flexible.*
->
-> *To enable a **Git Flow** strategy (using `develop` and `release` branches), refer to the specific uncommenting instructions in the `docs/CHECKLIST.md`.*
+The workflows use `uv` for dependency resolution and installation where configured.
 
 #### Automation Overview
-| Workflow                     | Trigger                        | Purpose                                                         |
-|------------------------------|--------------------------------|-----------------------------------------------------------------|
-| 1) `.pre-commit-config.yaml` | On every commit                | **Local Guard.** First line of defense.                         |
-| 2) `pr-checks.yml`           | Pull Requests to main          | **Gatekeeping.** Blocks broken or messy code from being merged. |
-| 3) `ci.yml`                  | Push to main & manual          | **Verification.** Proves the package is ready for distribution. |
-| 4) `cd.yml`                  | On completed `CI` workflow run | **Automation.** Handles the releasing (TestPyPI/GHCR/Releases). |
-| 5) `security.yml`            | Pull Requests to main & manual | **Protection.** Scans for vulnerabilities and leaked secrets.   |
-| 6) Dependabot                | Scheduled                      | **Maintenance.** Automated dependency updates.                  |
 
----
+| Workflow or tool | Trigger | Purpose |
+|:--|:--|:--|
+| `.pre-commit-config.yaml` | Local Git hooks after `prek install` | Runs selected hygiene, linting and security hooks on commits. |
+| `pr-checks.yml` | Pull requests targeting `main` | Validates PR metadata, lint, types, tests, coverage and repository hygiene. |
+| `ci.yml` | Pushes to `main` and manual dispatch | Runs the full platform/Python test matrix, builds distributions and smoke-tests the package and Docker image. |
+| `cd.yml` | Successful completion of CI on `main` | Downloads and verifies the CI distribution artifact. Publishing jobs are currently commented out. |
+| `security.yml` | Pull requests to `main`, weekly schedule and manual dispatch | Runs dependency, source-code and secret scans. |
+| Dependabot | Weekly schedule | Opens dependency update pull requests. |
+| `label-sync.yml` | Changes to `.github/labels.yml` on `main`, or manual dispatch | Synchronizes repository labels. |
 
 #### Prek Workflow
-The first line of defense for code quality.
-By running checks locally before every commit, we eliminate "fix style" commits and ensure a clean history.
 
-> **Purpose:** First line of defense.
->
-> **When:** On every commit.
->
-> **Focus:** Catch formatting, linting and security issues before any commit.
+The `.pre-commit-config.yaml` file defines local hooks. Install them from the repository root after installing the development dependencies:
 
-**Integrated Hooks:**
-- **`pre-commit-hooks`**: General workspace hygiene (removes trailing whitespace, fixes end-of-file, checks YAML/TOML syntax).
-- **`ruff`**: An extremely fast Python linter and formatter.
-- **`bandit`**: Scans for common security issues in Python code.
-- **`detect-secrets`**: Prevents accidental commits of API keys or passwords.
+```bash
+prek install
+```
 
----
+The configured hooks include:
+- **pre-commit-hooks:** trailing whitespace, end-of-file, YAML and TOML checks, large-file checks and executable shebang checks;
+- **Ruff:** linting with `--fix` and formatting;
+- **detect-secrets:** scans files for potential secrets;
+- **Bandit:** checks Python code for common security issues.
+
+These hooks run locally when the installed Git hook is triggered. They do not run automatically until `prek install` has been executed. Mypy and pytest are run by GitHub workflows rather than configured as local hooks.
 
 #### Pull Request Checks Workflow
-The automated gatekeeper for the `main` branch.
-This workflow ensures that every contribution meets the project's quality, stability, and documentation standards before it is merged.
 
-> **Purpose:** Fast feedback, standardized history, and automated categorization.
->
-> **When:** On Pull Requests to `main` branch.
->
-> **Focus:** Static analysis (linting/types), unit testing, coverage reporting, and metadata validation.
+`pr-checks.yml` targets pull requests to `main`. It uses Python 3.12 and runs the following jobs:
 
-````yaml
-name: PR Checks
+- **PR title validation:** checks titles against the configured Conventional Commit types (`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`).
+- **PR description validation:** requires a description of at least 50 characters.
+- **Lint and format:** runs `ruff check` and `ruff format --check` against `src/` and `tests/`.
+- **Type checking:** runs Mypy against `src/`.
+- **Tests:** runs pytest with coverage and uploads coverage artifacts and a Codecov report.
+- **Conflict check:** searches tracked files outside `.github/` for merge-conflict markers.
+- **File-size check:** fails if files larger than 10 MB are found.
+- **Summary:** fails if a required check failed or was cancelled.
+- **PR labeler:** applies a label based on the title prefix. It runs after the summary and is configured not to fail the workflow if labeling itself fails.
 
-on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - edited
-      - ready_for_review
+The PR title label mapping is:
 
-jobs:
-  pr-title-check:       # Ensures history is semantic and searchable.
-  pr-description-check: # Guarantees context for every code change.
-  lint:                 # Enforces style via Ruff
-  mypy:                 # Verifies type safety
-  test:                 # Executes unit tests and uploads coverage to Codecov.
-  conflict-check:       # Detects merge conflicts early.
-  size-check:           # Warns if large files are being detected.
-  pr-checks-summary:    # Provides a summary of the previous jobs.
-  pr-labeler:           # Automates project board organization.
-````
+| Title prefix | Applied label |
+|:--|:--|
+| `feat:` | `feature` |
+| `fix:` | `bug` |
+| `docs:` | `documentation` |
+| `style:`, `perf:`, `test:`, `build:`, `chore:` | `enhancement` |
+| `refactor:` | `refactor` |
+| `ci:` | `ci` |
 
-> **Note:** *Test coverage reports are automatically uploaded to Codecov for visualization. Raw artifacts are also available under the Actions > Artifacts tab.*
+A title may also use a scope, for example `feat(api): add endpoint`.
 
-
-**PR Guidelines:** This project uses [Conventional Commits](https://www.conventionalcommits.org/) for PR titles.
-
-**PR Title Format:** `<type>: <description>`
-
-**PR Title Types:** Standardized titles are enforced for searchability and labeling.
-
-**PR Title Examples:**
-- ✅ `feat: add user login`
-- ❌ `Updated code` (missing type)
-
-**PR Codecov Report:** Provides an automated comment in every PR with a coverage difference and impact analysis.
-
-**PR Types & Labeling:**
-
-The repository automatically assigns labels to pull requests based on their title.
-The Labeler runs after `pr-checks-summary` and errors in `pr-labeler` will not fail the `pr-checks` workflow.
-
-| Title       | Applied Label   | Description                                  |
-|-------------| --------------- | -------------------------------------------- |
-| `feat:`     | `feature`       | Adds a new feature or capability             |
-| `fix:`      | `bug`           | Fixes a bug or incorrect behavior            |
-| `docs:`     | `documentation` | Documentation-only changes                   |
-| `style:`    | `enhancement`   | Code style changes (no logic changes)        |
-| `refactor:` | `refactor`      | Code restructuring without functional change |
-| `perf:`     | `enhancement`   | Performance improvements                     |
-| `test:`     | `enhancement`   | Adding or modifying tests                    |
-| `build:`    | `enhancement`   | Build system or dependency changes           |
-| `ci:`       | `ci`            | CI/CD configuration changes                  |
-| `chore:`    | `chore`         | Maintenance tasks or housekeeping            |
-
----
+Coverage reports are uploaded as workflow artifacts and sent to Codecov. Codecov's project target is 80%; patch coverage is informational in `codecov.yml`.
 
 #### CI Workflow
-This workflow serves as the final verification engine for the codebase.
-The CI process performs a deep validation to ensure that the integrated code is correctly versioned, stable, and ready for distribution.
 
-> **Purpose:** Final verification and build preparation.
->
-> **When:** Pushes to the `main` branch.
->
-> **Focus:** Extensive testing, distribution builds, and smoke testing.
+`ci.yml` runs on pushes to `main` and can also be started manually. It:
 
-````yaml
-name: CI
+1. Checks that the version in `pyproject.toml` does not already have a corresponding `v<version>` Git tag.
+2. Runs the full test suite on Ubuntu, Windows and macOS with Python 3.12, 3.13 and 3.14.
+3. Builds the source distribution and wheel after the test matrix succeeds.
+4. Builds the Docker image and runs its default command as a container smoke test.
+5. Installs the built wheel in a clean job, verifies that the package can be imported and runs its console-script entry point when one is present.
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch: {}
-
-jobs:
-  verify-version:      # Preventing deployment collisions.
-  test:                # Executes the complete test suite with coverage and uploads report to Codecov.
-  build-distribution:  # Packages the code into a distributable format.
-  build-docker:        # Builds the image and performs a quick run.
-  smoke-test:          # Proves the package is installable and functional.
-````
-
-> **Note:** *Test coverage reports are automatically uploaded to Codecov for visualization. Raw artifacts are also available under the Actions > Artifacts tab.*
-
----
+Coverage artifacts are uploaded from the Ubuntu/Python 3.12 matrix run and that run also uploads coverage to Codecov.
 
 #### CD Workflow
-This workflow automates the final stage of the software lifecycle: **Delivery**.
-By triggering only after a completed CI run, it ensures that only fully vetted and smoke-tested code is ever published to the ecosystem.
 
-> **Purpose:** Production deployments.
->
-> **When:** On completed `CI` workflow run.
->
-> **Focus:** Publish package, push Docker image and create release.
+`cd.yml` is triggered by a completed CI workflow run on `main`. The active `download-distribution` job runs only when the triggering CI run succeeded and downloads the distribution artifact produced by that run.
 
-````yaml
-name: CD
-
-on:
-  workflow_run:
-    workflows: [ "CI" ]
-    types:
-    - completed
-  workflow_dispatch: {}
-
-jobs:
-  download-distribution:  # Retrieves the verified artifacts from the CI pipeline.
-  publish-test-pypi:      # Distributes the package to a test registry for validation.
-  publish-docker:         # Pushes the image to the GitHub Container Registry.
-  github-release:         # Formalizes the version with a GitHub Release and changelog.
-````
-> **Note:** *Deployments in `cd.yml` are commented out. Uncomment them once you are ready to deploy.*
-
----
+The Docker publishing, TestPyPI publishing and GitHub Release jobs are present as commented-out examples. They do not run in the current configuration. Before enabling them, configure the relevant registry permissions, TestPyPI trusted publisher and GitHub environment, and verify the package/repository-specific values.
 
 #### Security Workflow
-This workflow acts as an automated security audit, scanning your codebase and dependencies for vulnerabilities before any code is merged.
-It ensures the project remains compliant with basic security standards.
 
-> **Purpose:** Security audits & vulnerability scanning.
->
-> **When:** On PRs.
->
-> **Focus:** Dependencies, code security, SAST.
+`security.yml` runs on:
+- pull requests targeting `main`;
+- a weekly schedule at 00:00 UTC every Monday;
+- manual workflow dispatch.
 
-````yaml
-name: Security Scan
+It contains three scans:
 
-on:
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch: {}
+- **Snyk:** runs Snyk Open Source against that dependency set, and runs Snyk Code against the source. SARIF reports are uploaded as workflow artifacts. Findings are surfaced as workflow annotations; the current shell handling does not fail the job for Snyk findings or scanner errors.
+- **Bandit:** scans `src/` using the configuration in `pyproject.toml` and uploads a JSON report. Bandit's command exit status is not suppressed, so findings can fail this job.
+- **TruffleHog:** scans the pull-request changes for PR events and scans repository history for scheduled or manually dispatched runs.
 
-jobs:
-  snyk-security-scan:     # Evaluates third-party library code security
-  bandit-sast:            # Deep-scans internal code for security flaws.
-  secrets-scan:           # Ensures no credentials or keys are leaked.
-````
-> **Note:** *Requires `SNYK_TOKEN` to be set in GitHub Actions Secrets.*
-
-> **Note:** *Detailed security audit reports from Snyk and Bandit are preserved as HTML artifacts in the Actions > Artifacts tab.*
-
----
+The workflow requires `SNYK_TOKEN` and `SNYK_ORG_ID` repository Actions secrets for Snyk. Uploading SARIF to GitHub's Security dashboard is commented out and is not currently enabled.
 
 #### Dependabot Workflow
-This configuration automates dependency management by proactively checking for updates and security patches across your entire stack.
-When a new version is released, Dependabot opens a Pull Request to keep the project current and secure.
 
-> **Purpose:** Keep the project current and secure
->
-> **When:** Scheduled
->
-> **Focus:** Dependency management
+Dependabot is configured to check the following ecosystems weekly:
+- **pip:** Python project dependencies in the repository root;
+- **github-actions:** GitHub Actions references;
+- **docker:** the Dockerfile in `/docker`.
 
-**Supports:**
-- **pip** (Python)
-- **github-actions**
-- **docker**
+It opens pull requests with configured labels and commit-message prefixes. The Python dependency updates are assigned to the configured repository owner after bootstrap.
 
 ---
 
 ## Data & Environment Management
 
-This layer handles the physical assets, environment virtualization, and project documentation that support the core source code.
-By isolating these from the `src/` directory, the project remains clean, portable, and secure.
+This section describes the repository-level directories that support development. Their contents are not automatically part of the installed Python package.
 
 ### Storage & Resources
-* **`data/`**: Structured into `raw/` and `processed/`. This directory is for local data persistence. It is strictly ignored by Git to ensure that large datasets or sensitive user information are never committed to version control.
-* **`notebooks/`**: A dedicated space for exploratory data analysis (EDA), prototyping, and research. Keeping these separate from the source code ensures that "scratchpad" code and heavy output cells do not clutter production logic.
-* **`res/`**: Short for "Resources." This folder houses static assets required by the repository, for example images.
+
+- **`data/`:** contains `raw/` and `processed/` directories. `.gitignore` keeps data files out of version control while retaining the empty directory structure with `.gitkeep` files. `.dockerignore` excludes the directory from Docker build context.
+- **`notebooks/`:** a location for exploratory analysis, prototyping and research. It is excluded from Docker build context.
+- **`res/`:** an optional location for static repository resources. It is excluded from Docker build context; move or package any runtime assets that the application needs before relying on them in a container.
 
 ### Documentation & Governance
-* **`docs/`**: The central hub for project knowledge. While the `README.md` serves as the landing page, `docs/` houses deep-dives like `CONTRIBUTING.md`, `SECURITY.md`, and technical specifications.
-* **`LICENSE.md`**: Defines the legal framework and usage permissions for the code.
-* **`README.md`**: The "Front Desk" of the project—focused on high-level overviews, quick-start instructions, and architectural summaries.
-* **`.dockerignore` & `.gitignore`**: These files are precision-tuned to ensure only essential source files enter the build context or the repository. They explicitly exclude local artifacts like `.log/`, `data/`, and `__pycache__`.
+
+- **`docs/`:** contains setup instructions, contribution guidance, security policy, code of conduct and the generated-project README template.
+- **`LICENSE.md`:** contains the project's license.
+- **`README.md`:** the repository landing page. During bootstrap, it is replaced by `docs/PROJECT_README.md`.
+- **`.dockerignore` and `.gitignore`:** exclude local environments, caches, generated artifacts and other files from the Docker build context and Git repository, respectively.
 
 ---
 
 ## Containerization
-The `docker/` directory contains the `Dockerfile` and `docker-compose.yml`,
-focused on reproducible builds, reduced image size and alignment with CI/CD workflows.
+
+The `docker/` directory contains the Dockerfile and a minimal Docker Compose configuration.
 
 ### Multi-Stage Docker Build
-The `docker/Dockerfile` uses a multi-stage build strategy:
 
-* **Builder**: Uses an `uv` image for fast dependency resolution.
-* **Runtime**: Uses a slim Python image and runs as a non-root user.
+The Dockerfile has two stages:
 
-This results in smaller attack surface and secure default container execution.
+- **Builder:** uses the Astral `uv` image to resolve and install the project and its runtime dependencies. Development dependencies are excluded.
+- **Runtime:** uses a slim Python image, copies the virtual environment from the builder and runs the configured console command as a non-root user.
 
 ### Environment Configuration
-The image supports both build-time configuration and runtime overrides for `APP_ENV`.
+
+The Dockerfile declares:
 
 ```dockerfile
 ARG APP_ENV=DEV
 ENV APP_ENV=$APP_ENV
 ```
 
-This allows Docker and orchestration platforms to override configuration without modifying the image.
+The build argument sets the image's default environment. A container runtime can override `APP_ENV` when starting the container. The application normalizes the value to lowercase when selecting configuration files.
+
+The image sets the virtual environment on `PATH`, enables unbuffered Python output, disables bytecode writes and runs as the `nonroot` user (UID/GID 999). Development dependencies, including `python-dotenv`, are excluded. The `.dockerignore` also excludes dotenv files, so configure containers through runtime environment variables. If you deliberately mount a dotenv file into a container, add `python-dotenv` to the runtime dependencies.
 
 ### Docker Compose
-The provided `docker/docker-compose.yml` is intentionally minimal and expandable for additional services such as databases.
+
+`docker/docker-compose.yml` defines a single application service and builds from the repository root using `docker/Dockerfile`. It sets `APP_ENV=DEV`. It is a minimal starting point; it does not provision a database or other supporting services.
 
 ### Multi-Architecture Support
-The CD workflow builds images for:
-* **linux/amd64**
-* **linux/arm64**
 
-This allows the image to run on both x86 and ARM environments.
+The commented-out Docker publishing job in `cd.yml` contains a Buildx configuration for `linux/amd64` and `linux/arm64`. Multi-platform publishing is not active until that job is enabled and configured.
 
 ---
 
 ## Source Code Management
 
-The `src/` directory houses the actual source code of the project.
-By using the **src-layout**, we ensure that the code is only importable when properly installed, preventing common packaging bugs and ensuring a clean separation between the project root and the application logic.
+The `src/` directory contains the importable Python package. The `src/` layout helps ensure tests and tools exercise the installed package rather than accidentally importing a same-named package from the repository root.
 
 ### Internal Structure: `src/package_name/`
-The internal structure follows a modular design to keep the source code of your application organized:
 
-* **`main.py`**: The central entry point for the application. It orchestrates the startup, including configuration loading and logger initialization.
-* **`core/`**: A dedicated subdirectory for utilities:
-    * **`config.py`**: Contains the Pydantic-based configuration logic that implements the layered loading strategy.
-    * **`logger.py`**: Defines the `structlog` integrated with the standard `logging` module, including security masking.
+- **`main.py`:** example application entry point. It configures logging, loads settings and emits startup messages. Replace or extend it with application-specific behavior.
+- **`core/config.py`:** defines the Pydantic settings models and environment/TOML loading.
+- **`core/logger.py`:** configures `structlog` and standard logging, including environment context and sensitive-field masking.
+- **`__init__.py`:** exposes the installed distribution version as `__version__`, falling back to `"unknown"` if package metadata is unavailable.
 
 ### Scalability Strategy
-As the project grows from a simple script to an enterprise-grade application, you can expand this directory by adding:
-- **`api/`**: For FastAPI/Flask routes and schemas.
-- **`services/`**: For business logic and external integrations.
-- **`models/`**: For database entities and data structures.
+
+The template intentionally starts with a small package. Add modules when the application needs them.
 
 ---
 
 ## Testing Management
 
-The `tests/` directory is structured to provide high coverage with minimal friction, utilizing `pytest` as the primary engine for both unit and integration testing.
+The `tests/` directory contains baseline tests for configuration, logging and the example entry point. The tests are intended to be extended or replaced as application behavior grows.
 
 ### Test Suite Structure
-* **`conftest.py`**: The central hub for shared `pytest` fixtures. This allows you to define reusable components that are automatically available to all test files.
-* **`test_main.py`**, **`test_config.py` & `test_logger.py`**: Baseline tests that ensure the source code is functioning correctly.
+
+- **`conftest.py`:** sets `APP_ENV=dev` for the test process.
+- **`test_config.py`:** checks loading the development configuration, environment-variable overrides and validation errors.
+- **`test_logger.py`:** checks environment context, sensitive-field masking, console handlers and rotating file logging.
+- **`test_main.py`:** checks the module's `__main__` execution path.
 
 ### Quality Metrics & Artifacts
-The testing workflow is integrated with the `.log/` directory and `Codecov` to provide deep insights into code health:
 
-* **Automated Coverage**: Every test run generates a `.coverage` report, allowing you to see exactly which lines of code are untested.
-* **Coverage Threshold**: The project enforces a **minimum coverage of 80%**. If code coverage falls below this mark, the `pr-checks` workflow will fail, preventing merges that reduce test quality.
+Pytest is configured in `pyproject.toml` with `pytest-cov`. Running the test suite generates:
+- terminal coverage output;
+- an HTML report in `.log/coverage/htmlcov/`;
+- an XML report at `.log/coverage/coverage.xml`;
+- coverage data in `.log/coverage/.coverage`.
+
+The configured minimum total coverage is **80%**. A test run fails if the threshold is not met. The PR workflow also uploads coverage artifacts and sends the report to Codecov.
 
 ### Running Tests Locally
-Pytest is configured via `pyproject.toml` to include coverage reporting and verbose output by default.
 
+Install the development dependency group, then run:
 
-Just run:
 ```bash
+uv sync
+uv run pytest
+```
+
+Alternatively, with a recent pip version that supports dependency groups:
+
+```bash
+python -m pip install -e . --group dev
 pytest
 ```
 
 ### Coverage Reporting with Codecov
-This project utilizes Codecov for cloud-based coverage analysis.
-This service transforms raw test data into actionable insights during the review process via the `codecov.yml` configuration.
-* **PR Integration**: Delivers an automated Codecov Report to every PR, featuring coverage deltas and impact analysis.
-* **Automated Uploads**: Every time tests are executed in `pr-checks.yml` or `ci.yml`, reports are automatically synced to the Codecov dashboard.
-* **Informational Patch**: Provides targeted feedback on the coverage of only the changed lines within a Pull Request.
-* **Visualizations**: Offers interactive charts on the Codecov dashboard to identify complex, low-coverage modules.
+
+`codecov.yml` configures Codecov's pull-request comment layout and coverage status targets:
+- the project coverage target is 80%;
+- patch coverage is informational;
+- the PR comment displays the diff, flags and files sections.
+
+The PR checks workflow uploads coverage on pull requests. The CI workflow uploads coverage from the Ubuntu/Python 3.12 matrix run. Codecov reporting requires the repository's Codecov integration and `CODECOV_TOKEN` secret.
 
 ---
 
 ## Project Management with pyproject.toml
 
-The `pyproject.toml` file is the central coordination point of the blueprint. It centralizes all configuration into a single, standardized location.
+`pyproject.toml` is the central configuration file for package metadata, dependencies, build settings and developer tools.
 
 ### Core Components
 
-* **Metadata & Distribution:** Defines the package name, versioning, and authors. It explicitly maps the CLI command to the `main()` function in your source code, enabling instant installation.
-* **Dependency Management:**
-  * **Production:** Strictly minimal, focusing on robust core libraries like `pydantic-settings` and `structlog`.
-  * **Development (`dev`):** Includes a complete suite for testing (`pytest`), formatting (`ruff`), type-checking (`mypy`), and security auditing (`bandit`).
-* **Source Layout:** Uses `tool.setuptools.packages.find` to explicitly point to the `src/` directory, enforcing the clean package structure discussed in the Architecture section.
+- **Metadata & Distribution:** `[project]` defines the distribution name, version, description, Python requirement, license, authors, dependencies and project URLs.
+- **Console command:** `[project.scripts]` maps the distribution command to `package_name.main:main`.
+- **Dependencies:** the runtime dependencies are `pydantic`, `pydantic-settings` and `structlog`.
+- **Dependency groups:**
+  - `test` contains `pytest` and `pytest-cov`;
+  - `quality` contains `prek`, Bandit, Ruff and Mypy;
+  - `dev` includes the `test` and `quality` groups plus `python-dotenv`.
+- **Build backend:** Setuptools discovers packages under `src/` and has namespace-package discovery disabled.
+
+The project requires Python **3.12 or newer**. The CI matrix currently tests Python 3.12, 3.13 and 3.14.
 
 ### Tool Orchestration
 
-The blueprint configures each tool to respect the project's layered architecture:
-
-| Tool         | Focus            | Key Configuration                                                                          |
-|:-------------|:-----------------|:-------------------------------------------------------------------------------------------|
-| **Ruff**     | Speed & Linting  | Configured with a 120-character line length and auto-fix capabilities.                     |
-| **Pytest**   | Verification     | Integrated with `coverage` to enforce a minimum **80% coverage threshold**.                |
-| **Mypy**     | Type Safety      | Configured for `strict = true` with cached data redirected to `.log/mypy_cache`.           |
-| **Bandit**   | Security         | Scans source code for vulnerabilities while ignoring test files to reduce false positives. |
-| **Coverage** | Quality Metrics  | Redirects all output artifacts (HTML, XML, .coverage) to the `.log/` directory.            |
+| Tool | Purpose | Key configuration |
+|:--|:--|:--|
+| **Ruff** | Linting and formatting | 120-character line length, Python 3.12 target. |
+| **Pytest** | Test execution | Discovers tests under `tests/`, adds coverage reporting and verbose output. |
+| **Coverage** | Coverage measurement | Branch coverage enabled; minimum total coverage 80%; reports written under `.log/coverage/`. |
+| **Mypy** | Static type checking | Strict mode enabled with selected definition/decorator checks relaxed; cache stored in `.log/mypy_cache/`. |
+| **Bandit** | Python security analysis | Scans source code; excludes tests and virtual environments and skips B101. |
+| **Prek** | Local hooks | Runs file hygiene, Ruff, detect-secrets and Bandit hooks defined in `.pre-commit-config.yaml`. |
 
 ### Semantic Versioning & Release
-The `version` field in this file is the authoritative reference.
-The **CI Workflow** uses this to verify that versions are bumped before a release, ensuring that the distribution published to PyPI or GitHub is always unique and traceable.
+
+The CI workflow checks whether the version defined in pyproject.toml already exists as a Git tag (v<version>).
+If the tag exists, the workflow fails and requires the project version to be changed before proceeding. This helps prevent reusing an existing release version.
+The version follows the project's chosen versioning convention. Actual publishing and release creation depend on the corresponding CD jobs being enabled and configured.
