@@ -7,9 +7,8 @@ from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, Settings
 
 logger = structlog.get_logger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-CONFIG_DIR = PROJECT_ROOT / ".config"
-ENV_MODE: str = os.getenv("APP_ENV", "dev").lower()
+CONFIG_DIR = Path(os.getenv("APP_CONFIG_DIR") or ".config").expanduser().resolve()
+ENV_MODE = os.getenv("APP_ENV", "dev").strip().lower()
 
 
 class DatabaseSettings(BaseModel):
@@ -28,9 +27,8 @@ class APISettings(BaseModel):
     Configuration schema for HTTP client settings.
     """
 
-    base_url: str = Field(default="https://api.default.com")
-
-    key: SecretStr = Field(default=SecretStr("default_secret"))
+    base_url: str | None = Field(default=None)
+    key: SecretStr | None = Field(default=None)
 
 
 class Settings(BaseSettings):
@@ -84,6 +82,7 @@ class Settings(BaseSettings):
         """
 
         try:
+            logger.info("Loading settings from config", path=CONFIG_DIR)
             return cls()
 
         except ValidationError:

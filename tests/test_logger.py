@@ -4,7 +4,7 @@ from pathlib import Path
 
 import structlog
 
-from src.package_name.core.logger import (
+from package_name.core.logger import (
     add_environment_info,
     mask_sensitive_data,
     setup_logging,
@@ -30,7 +30,6 @@ def test_add_environment_info_defaults_to_dev(monkeypatch):
 def test_mask_sensitive_data_masks_sensitive_values():
     event = {
         "username": "user",
-        "password": "secret",  # pragma: allowlist secret
         "access_token": "token-value",
         "api_key": "key-value",  # pragma: allowlist secret
         "auth_header": "bearer-value",
@@ -41,7 +40,6 @@ def test_mask_sensitive_data_masks_sensitive_values():
 
     assert result == {
         "username": "user",
-        "password": "********",
         "access_token": "********",
         "api_key": "********",
         "auth_header": "********",

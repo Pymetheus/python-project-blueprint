@@ -27,12 +27,12 @@ def main() -> None:
     """
 
     # Initialize logging first so configuration loading is tracked
-    setup_logging(write_to_disk=False, log_dir=Path("../../.log"))
+    setup_logging(write_to_disk=False, log_dir=Path(".log"), pretty_print=True)
 
     # Load settings
     settings = Settings.load()
 
-    logger.info("Application started.", host=settings.database.host, api_key=settings.api.key)
+    logger.info("Application started.", host=settings.database.host, db=settings.database.url)
     logger.info("Reached end of application.")
 
 

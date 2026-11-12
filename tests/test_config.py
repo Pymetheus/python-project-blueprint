@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from src.package_name.core.config import Settings
+from package_name.core.config import Settings
 
 
 def test_load_uses_the_active_environment_configuration():

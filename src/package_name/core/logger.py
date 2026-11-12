@@ -11,7 +11,7 @@ ProcessorType = Any
 
 
 def setup_logging(
-    write_to_disk: bool = False, log_dir: Path | None = None, pretty_print: bool = True, level: int = logging.INFO
+    write_to_disk: bool = False, log_dir: Path | None = None, pretty_print: bool = False, level: int = logging.INFO
 ) -> None:
     """
     Configure structlog and standard logging for the application.
@@ -50,7 +50,7 @@ def setup_logging(
         log_dir.mkdir(parents=True, exist_ok=True)
         log_file = log_dir / "logs.json"
 
-        file_handler = RotatingFileHandler(log_file, maxBytes=10 * 1024 * 1024, backupCount=3)
+        file_handler = RotatingFileHandler(log_file, maxBytes=10 * 1024 * 1024, backupCount=3, encoding="utf-8")
         file_formatter = structlog.stdlib.ProcessorFormatter(
             foreign_pre_chain=custom_processors,
             processors=[
@@ -97,7 +97,7 @@ def add_environment_info(_: Any, __: str, event_dict: dict[str, Any]) -> dict[st
         dict: Updated dictionary with '_env' key.
     """
 
-    event_dict["_env"] = os.getenv("APP_ENV", "dev").lower()
+    event_dict["_env"] = os.getenv("APP_ENV", "dev").strip().lower()
     return event_dict
 
 
