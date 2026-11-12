@@ -12,9 +12,8 @@ on:
   workflow_dispatch: {}
 
 permissions:
-  actions: read
   contents: read
-  security-events: write
+#  security-events: write # Uncomment for upload Snyk SARIF to GitHub Security Dashboard
 
 env:
   PYTHON_VERSION: "3.12"
@@ -42,31 +41,64 @@ jobs:
 
       - name: Run Snyk for Open Source Vulnerabilities (OSS)
         run: |
+          set +e
           snyk test \
             --file=requirements.txt \
             --package-manager=pip \
-            --org=${{ secrets.SNYK_ORG_ID }} \
-            --sarif \
+            --org="$SNYK_ORG_ID" \
             --sarif-file-output=snyk-oss.sarif
+          status=$?
+          set -e
+
+          case "$status" in
+            0)
+              echo "Snyk OSS: No vulnerabilities found."
+              ;;
+            1)
+              echo "::warning title=Snyk OSS::Vulnerabilities detected. See the uploaded SARIF report."
+              ;;
+            *)
+              echo "::error title=Snyk OSS::Scan failed with exit code $status. Check authentication and scanner configuration."
+              ;;
+          esac
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        continue-on-error: true
+          SNYK_ORG_ID: ${{ secrets.SNYK_ORG_ID }}
 
       - name: Run Snyk Code (SAST)
-        run: snyk code test --sarif > snyk-code.sarif
+        run: |
+          set +e
+          snyk code test \
+            --sarif-file-output=snyk-code.sarif
+          status=$?
+          set -e
+
+          case "$status" in
+            0)
+              echo "Snyk Code: No vulnerabilities found."
+              ;;
+            1)
+              echo "::warning title=Snyk Code::Vulnerabilities detected. See the uploaded SARIF report."
+              ;;
+            *)
+              echo "::error title=Snyk Code::Scan failed with exit code $status. Check authentication and scanner configuration."
+              ;;
+          esac
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        continue-on-error: true
 
       - name: Upload SARIF as build artifact
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: snyk-results
           path: |
             snyk-code.sarif
             snyk-oss.sarif
+          if-no-files-found: warn
 
-      # --- Upload Snyk SARIF to GitHub Security Dashboard ONLY available on public repos---
+      # --- Upload Snyk SARIF to GitHub Security Dashboard ---
+      # Requires GitHub Code Security availability for the repository.
       #- name: Upload SARIF to GitHub Security
       #  uses: github/codeql-action/upload-sarif@v4
       #  with:
@@ -107,6 +139,7 @@ jobs:
         with:
           name: bandit-report
           path: bandit-report.json
+          if-no-files-found: warn
 
   secrets-scan:
     name: Secrets Detection
@@ -118,9 +151,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: TruffleHog Secret Scan
+      - name: TruffleHog PR Scan
+        if: github.event_name == 'pull_request'
         uses: trufflesecurity/trufflehog@main
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
+          base: ${{ github.event.pull_request.base.sha }}
           head: ${{ github.event.pull_request.head.sha }}
+
+      - name: TruffleHog Full History Scan
+        if: github.event_name != 'pull_request'
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ""
+          head: ${{ github.ref_name }}

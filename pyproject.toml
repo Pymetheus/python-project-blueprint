@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "[[DESCRIPTION]]"
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.12"
-license = {"file" = "LICENSE.md"}
+license = "MIT"
+license-files = ["LICENSE.md"]
 authors = [
     { name = "[[USERNAME]]", email = "AUTHOR@EXAMPLE.COM" }
 ]
@@ -15,13 +16,13 @@ classifiers = [
 
 dependencies = [
     "pydantic>=2.14.3",
-    "pydantic-settings>=2.13.1",
+    "pydantic-settings>=2.14.1",
     "structlog>=25.5.0",
 ]
 
 [dependency-groups]
 test = ["pytest>=9.0.3", "pytest-cov>=7.1.0"]
-quality = ["prek>=0.3.1", "bandit[toml]>=1.9.4", "ruff>=0.14.7", "mypy>=1.19.0"]
+quality = ["prek>=0.3.1", "bandit[toml]>=1.9.4", "ruff>=0.15.10", "mypy>=1.20.1"]
 dev = [
     {include-group = "test"},
     {include-group = "quality"},
@@ -38,12 +39,13 @@ Issues = "https://github.com/[[USERNAME]]/[[REPO_NAME]]/issues"
 DISTRIBUTION-NAME = "package_name.main:main"
 
 [build-system]
-requires = ["setuptools>=68.0"]
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 
 [tool.setuptools.packages.find]
 where = ["src"]
+namespaces = false
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
@@ -52,7 +54,7 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
-    "--cov=src",
+    "--cov",
     "--cov-report=xml",
     "--cov-report=html",
     "--cov-report=term-missing",
@@ -64,13 +66,7 @@ source = ["src"]
 relative_files = true
 branch = true
 data_file = ".log/coverage/.coverage"
-omit = [
-    "*/tests/*",
-    "*/test_*.py",
-    "*/__pycache__/*",
-    "*/.venv/*",
-    "*/env/*",
-]
+
 
 [tool.coverage.report]
 skip_covered = false
@@ -117,9 +113,6 @@ ignore = [
 fixable = ["ALL"]
 unfixable = []
 
-[tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]  # Allow asserts in tests
-
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
@@ -138,9 +131,9 @@ namespace_packages = true
 # Strictness Control
 strict = true
 check_untyped_defs = true
-disallow_untyped_defs = false        # Chang to true for stricter behaviour
-disallow_incomplete_defs = false     # Chang to true for stricter behaviour
-disallow_untyped_decorators = false  # Chang to true for stricter behaviour
+disallow_untyped_defs = false        # Change to true for stricter behaviour
+disallow_incomplete_defs = false     # Change to true for stricter behaviour
+disallow_untyped_decorators = false  # Change to true for stricter behaviour
 no_implicit_optional = true
 
 # Warnings & Code Quality
@@ -149,7 +142,7 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 warn_return_any = true
 warn_unreachable = true
-ignore_missing_imports = true
+ignore_missing_imports = false
 
 # Output & Cache
 pretty = true

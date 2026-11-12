@@ -20,8 +20,6 @@ Thumbs.db
 venv/
 env/
 ENV/
-bin/
-lib/
 develop-eggs/
 dist/
 build/
