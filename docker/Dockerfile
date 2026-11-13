@@ -1,6 +1,6 @@
 # This Dockerfile was generated for [[PACKAGE_NAME]]
 
-FROM ghcr.io/astral-sh/uv:0.13.7-python3.15-trixie-slim AS builder
+FROM ghcr.io/astral-sh/uv:0.13.8-python3.15-trixie-slim AS builder
 
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
